@@ -16,7 +16,7 @@ export interface IcsEvent {
 }
 
 export function escapeText(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\;');
+  return s.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
 }
 
 function utcStamp(d: Date): string {

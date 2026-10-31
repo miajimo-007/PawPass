@@ -26,7 +26,7 @@ describe('calendar export', () => {
     expect(ics).toContain('DTEND;VALUE=DATE:20260416');
     expect(ics).toContain('SUMMARY:Luna: Check-up\\, vaccines');
     expect(ics.trim().endsWith('END:VCALENDAR')).toBe(true);
-    expect(escapeText('a;b\nc')).toBe('a\;b\\nc');
+    expect(escapeText('a;b\nc')).toBe('a\\;b\\nc');
   });
 });
 
