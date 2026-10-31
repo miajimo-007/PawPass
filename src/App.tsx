@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/misc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { ThemeProvider, useTheme } from '@/components/shared/ThemeProvider';
 import { HomePage } from '@/pages/HomePage';
 import { CatsPage } from '@/pages/CatsPage';
 import { CatDetailPage } from '@/pages/CatDetailPage';
@@ -41,6 +42,7 @@ function NotFound() {
 export default function App() {
   return (
     <ErrorBoundary>
+      <ThemeProvider>
       <HashRouter>
         <ConfirmProvider>
           <ActionsProvider>
@@ -63,12 +65,21 @@ export default function App() {
           </ActionsProvider>
         </ConfirmProvider>
       </HashRouter>
+      <ThemedToaster />
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}
+
+function ThemedToaster() {
+  const { dark } = useTheme();
+  return (
       <Toaster
+        theme={dark ? 'dark' : 'light'}
         position="top-center"
         offset="calc(env(safe-area-inset-top) + 12px)"
         toastOptions={{ className: 'font-sans', style: { borderRadius: 14 } }}
         closeButton
       />
-    </ErrorBoundary>
   );
 }

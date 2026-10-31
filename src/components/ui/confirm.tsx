@@ -37,7 +37,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       {children}
       <DialogPrimitive.Root open={!!state} onOpenChange={(o) => !o && close(false)}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-foreground/35 data-[state=open]:animate-fade-in" />
+          <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-black/45 data-[state=open]:animate-fade-in" />
           <DialogPrimitive.Content
             role="alertdialog"
             className="fixed left-1/2 top-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-background p-5 shadow-2xl data-[state=open]:animate-fade-in"

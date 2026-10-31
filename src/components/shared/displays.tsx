@@ -144,7 +144,7 @@ export function DoseList({
                 aria-label={`Mark ${s.medication.name} at ${formatTime(s.scheduledFor)} as given`}
                 className={cn(
                   'flex h-11 w-11 items-center justify-center rounded-full border transition-colors',
-                  s.status === 'given' ? 'border-success bg-success text-white' : 'hover:bg-success-soft',
+                  s.status === 'given' ? 'border-success bg-success text-background' : 'hover:bg-success-soft',
                 )}
               >
                 {s.status === 'given' ? <Check className="h-5 w-5" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
@@ -156,7 +156,7 @@ export function DoseList({
                 aria-label={`Mark ${s.medication.name} at ${formatTime(s.scheduledFor)} as skipped`}
                 className={cn(
                   'flex h-11 w-11 items-center justify-center rounded-full border transition-colors',
-                  s.status === 'skipped' ? 'border-warning bg-warning text-white' : 'hover:bg-warning-soft',
+                  s.status === 'skipped' ? 'border-warning bg-warning text-background' : 'hover:bg-warning-soft',
                 )}
               >
                 <Minus className="h-5 w-5" />

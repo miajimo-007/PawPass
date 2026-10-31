@@ -16,6 +16,7 @@ import { Field } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Segmented, Switch } from '@/components/ui/misc';
 import { useConfirm } from '@/components/ui/confirm';
+import { AppearanceCard } from '@/components/shared/AppearanceCard';
 
 export function ProfilePage() {
   const prefs = usePrefs() ?? DEFAULT_PREFS;
@@ -64,6 +65,8 @@ export function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <AppearanceCard />
 
       <Card>
         <CardHeader>

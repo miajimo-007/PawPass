@@ -18,6 +18,7 @@ import { useConfirm } from '@/components/ui/confirm';
 import { EmptyState, PageSkeleton, Segmented } from '@/components/ui/misc';
 import { ItemMenu } from '@/components/shared/ItemMenu';
 import { WelcomePanel } from '@/components/shared/WelcomePanel';
+import { useTheme } from '@/components/shared/ThemeProvider';
 
 type Range = '30' | '90' | '365' | 'all';
 const RANGE_OPTIONS: { value: Range; label: string }[] = [
@@ -33,6 +34,7 @@ export function HealthPage() {
   const data = useCatData(cat?.id);
   const act = useActions();
   const confirm = useConfirm();
+  const { color } = useTheme();
   const [metric, setMetric] = React.useState<MeasurementType>('weight');
   const [range, setRange] = React.useState<Range>('90');
   const [symptomFilter, setSymptomFilter] = React.useState<SymptomCategory | 'all'>('all');
@@ -106,22 +108,22 @@ export function HealthPage() {
                   <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
                     <defs>
                       <linearGradient id="fillMetric" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(155 43% 21%)" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="hsl(155 43% 21%)" stopOpacity={0} />
+                        <stop offset="0%" stopColor={color('--primary')} stopOpacity={0.18} />
+                        <stop offset="100%" stopColor={color('--primary')} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} stroke="hsl(42 20% 88%)" />
+                    <CartesianGrid vertical={false} stroke={color('--border')} />
                     <XAxis
                       dataKey="t"
                       tickFormatter={(t: string) => formatShortDate(t)}
-                      tick={{ fontSize: 11, fill: 'hsl(140 3% 38%)' }}
+                      tick={{ fontSize: 11, fill: color('--muted-foreground') }}
                       tickLine={false}
                       axisLine={false}
                       minTickGap={24}
                     />
                     <YAxis
                       domain={['auto', 'auto']}
-                      tick={{ fontSize: 11, fill: 'hsl(140 3% 38%)' }}
+                      tick={{ fontSize: 11, fill: color('--muted-foreground') }}
                       tickLine={false}
                       axisLine={false}
                       width={44}
@@ -129,9 +131,9 @@ export function HealthPage() {
                     <Tooltip
                       formatter={(v) => [`${v} ${unit}`, MEASUREMENT_LABELS[metric]]}
                       labelFormatter={(t: string) => formatDateTime(t)}
-                      contentStyle={{ borderRadius: 10, border: '1px solid hsl(42 20% 88%)', fontSize: 12 }}
+                      contentStyle={{ borderRadius: 10, border: `1px solid ${color('--border')}`, background: color('--card'), color: color('--foreground'), fontSize: 12 }}
                     />
-                    <Area type="monotone" dataKey="v" stroke="hsl(155 43% 21%)" strokeWidth={2} fill="url(#fillMetric)" dot={{ r: 3, fill: 'hsl(155 43% 21%)' }} activeDot={{ r: 5 }} />
+                    <Area type="monotone" dataKey="v" stroke={color('--primary')} strokeWidth={2} fill="url(#fillMetric)" dot={{ r: 3, fill: color('--primary') }} activeDot={{ r: 5 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
