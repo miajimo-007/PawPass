@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * PAWPASS design tokens.
+ * Defined once here and consumed through Tailwind (see tailwind.config.js).
+ * The same values are documented in docs/DESIGN_TOKENS.md for a future native iOS app.
+ */
+@layer base {
+  :root {
+    --background: 40 33% 97%;      /* #FAF8F4 warm white */
+    --foreground: 214 9% 15%;      /* #23262A charcoal */
+    --surface: 40 30% 99%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 9% 15%;
+
+    --primary: 155 43% 21%;        /* #1F4D3A deep forest */
+    --primary-foreground: 40 33% 98%;
+    --primary-soft: 140 18% 92%;
+
+    --secondary: 100 16% 93%;      /* sage tint */
+    --secondary-foreground: 150 22% 24%;
+    --sage: 120 14% 61%;           /* #8FA98F */
+    --sage-light: 104 15% 88%;
+
+    --muted: 40 22% 93%;
+    --muted-foreground: 140 3% 38%;
+    --accent: 100 16% 93%;
+    --accent-foreground: 155 43% 21%;
+
+    --destructive: 5 53% 43%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 8 55% 94%;
+    --warning: 36 79% 32%;
+    --warning-soft: 39 69% 91%;
+    --success: 151 39% 30%;
+    --success-soft: 140 25% 91%;
+    --info: 205 40% 36%;
+    --info-soft: 204 33% 92%;
+
+    --border: 42 20% 88%;
+    --input: 42 16% 82%;
+    --ring: 155 43% 28%;
+    --radius: 0.875rem;
+
+    --nav-height: 4rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+    font-variation-settings: 'opsz' 48, 'SOFT' 50;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  input[type='date'], input[type='datetime-local'], input[type='time'] {
+    min-height: 2.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .skeleton {
+    @apply rounded-md bg-muted;
+    background-image: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.6), transparent);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  .eyebrow {
+    @apply text-2xs font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
