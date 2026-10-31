@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
+  CalendarCheck2,
   CalendarClock,
   CalendarPlus,
   ChevronRight,
@@ -31,6 +32,8 @@ import { buildTimeline, type TimelineItem } from '@/services/records';
 import { dueVaccinations } from '@/services/vaccinations';
 import { pastDueAppointments, upcomingAppointments } from '@/services/appointments';
 import { latestOf, trendOf } from '@/services/health';
+import { markRoutineDone, needsRefill, routineLabel, routineStatus, stockDaysLeft } from '@/services/care';
+import { toast } from 'sonner';
 import { daysBetween, formatAge, formatDate, formatDateTime, relativeDays, toISODate } from '@/lib/dates';
 import { formatMeasurement } from '@/lib/units';
 import { NEUTER_LABELS, SEX_LABELS } from '@/lib/labels';
@@ -66,6 +69,12 @@ export function HomePage() {
   const vaccDue = dueVaccinations(data.vaccinations).slice(0, 3);
   const upcoming = upcomingAppointments(data.appointments).slice(0, 3);
   const pastDue = pastDueAppointments(data.appointments);
+  const routinesDue = data.routines
+    .map((r) => ({ r, st: routineStatus(r) }))
+    .filter(({ st }) => st.state !== 'ok')
+    .sort((a, b) => a.st.nextDue.localeCompare(b.st.nextDue))
+    .slice(0, 3);
+  const lowStock = data.medications.filter((m) => needsRefill(m, data.schedules));
   const timeline = buildTimeline(data.records, data.vaccinations, data.medications).slice(0, 5);
   const activeConditions = data.diagnoses.filter((d) => d.status !== 'resolved');
   const recentSymptoms = [...data.symptoms]
@@ -226,12 +235,46 @@ export function HomePage() {
                 </span>
               </Link>
             ))}
-            {upcoming.length === 0 && vaccDue.length === 0 && pastDue.length === 0 && (
+            {lowStock.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => act({ type: 'refill', medication: m })}
+                className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-muted"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning">
+                  <Pill className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1 text-sm">
+                  <span className="block truncate font-semibold">{m.name} running low</span>
+                  <span className="text-muted-foreground">
+                    {m.stockCount} left{stockDaysLeft(m, data.schedules) !== undefined ? ` · ~${stockDaysLeft(m, data.schedules)} days` : ''} · tap to refill
+                  </span>
+                </span>
+              </button>
+            ))}
+            {routinesDue.map(({ r, st }) => (
+              <div key={r.id} className="flex items-center gap-3 rounded-lg p-2">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+                  <CalendarCheck2 className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1 text-sm">
+                  <span className="block truncate font-semibold">{routineLabel(r)}</span>
+                  <span className={st.state === 'overdue' ? 'text-destructive' : 'text-muted-foreground'}>
+                    {st.state === 'overdue' ? `Overdue · was due ${formatDate(st.nextDue)}` : `Due ${relativeDays(st.nextDue).toLowerCase()}`}
+                  </span>
+                </span>
+                <Button size="sm" variant="outline" onClick={() => markRoutineDone(r.id).then(() => toast.success(`${routineLabel(r)} done`))}>
+                  Done
+                </Button>
+              </div>
+            ))}
+            {upcoming.length === 0 && vaccDue.length === 0 && pastDue.length === 0 && routinesDue.length === 0 && lowStock.length === 0 && (
               <EmptyState
                 compact
                 icon={CalendarClock}
                 title="Nothing scheduled"
-                description="Upcoming appointments and vet-confirmed vaccine dates appear here."
+                description="Appointments, vet-confirmed vaccine dates, care routines and refills appear here."
               />
             )}
           </CardContent>

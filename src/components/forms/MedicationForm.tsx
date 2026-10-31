@@ -37,6 +37,8 @@ export function MedicationForm({ catId, edit, onDone }: { catId: string; edit?: 
       reminderTimes: [],
       remindersEnabled: true,
       documentIds: edit?.documentIds ?? [],
+      stockCount: edit?.stockCount != null ? String(edit.stockCount) : '',
+      refillWarningDays: edit?.refillWarningDays != null ? String(edit.refillWarningDays) : '',
     },
   });
 
@@ -66,8 +68,14 @@ export function MedicationForm({ catId, edit, onDone }: { catId: string; edit?: 
     setSaving(true);
     try {
       const documentIds = await persistAttachments(v.catId, attach, v.startDate, 'prescription');
-      const { reminderTimes, remindersEnabled: re, ...rest } = v;
-      const input = { ...rest, endDate: rest.endDate || undefined, documentIds };
+      const { reminderTimes, remindersEnabled: re, stockCount, refillWarningDays, ...rest } = v;
+      const input = {
+        ...rest,
+        endDate: rest.endDate || undefined,
+        documentIds,
+        stockCount: stockCount ? Number(stockCount) : undefined,
+        refillWarningDays: refillWarningDays ? Number(refillWarningDays) : undefined,
+      };
       if (edit) await updateMedication(edit.id, input, { times: reminderTimes, remindersEnabled: re });
       else await createMedication(input, { times: reminderTimes, remindersEnabled: re });
       toast.success(edit ? 'Medication updated' : 'Medication added');
@@ -165,6 +173,17 @@ export function MedicationForm({ catId, edit, onDone }: { catId: string; edit?: 
           </Button>
         </div>
         <Switch id="med-reminders" checked={remindersEnabled} onChange={(v) => setValue('remindersEnabled', v)} label="Show reminders" />
+      </FormSection>
+
+      <FormSection title="Stock & refills">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Doses in stock" htmlFor="med-stock" optional error={e.stockCount?.message} hint="Goes down each time you mark a dose given.">
+            <Input type="number" inputMode="numeric" min={0} {...register('stockCount')} />
+          </Field>
+          <Field label="Warn when days left ≤" htmlFor="med-refill" optional error={e.refillWarningDays?.message} hint="Default 5 days.">
+            <Input type="number" inputMode="numeric" min={0} {...register('refillWarningDays')} />
+          </Field>
+        </div>
       </FormSection>
 
       <DocumentAttachField catId={selectedCat} value={attach} onChange={setAttach} />

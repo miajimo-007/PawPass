@@ -10,9 +10,10 @@ import { DEFAULT_PREFS } from '@/services/prefs';
 import { latestOf } from '@/services/health';
 import { dueVaccinations } from '@/services/vaccinations';
 import { upcomingAppointments } from '@/services/appointments';
+import { currentDiets, routineLabel, routineStatus } from '@/services/care';
 import { addDays, formatAge, formatDate, formatDateTime } from '@/lib/dates';
 import { formatMeasurement, toDisplay, unitLabel, type UnitPrefs } from '@/lib/units';
-import { ALLERGY_SEVERITY, CONDITION_STATUS, NEUTER_LABELS, RECORD_CATEGORIES, ROUTE_LABELS, SEVERITY_LABELS, SEX_LABELS, SYMPTOM_CATEGORIES } from '@/lib/labels';
+import { FOOD_TYPES, ALLERGY_SEVERITY, CONDITION_STATUS, NEUTER_LABELS, RECORD_CATEGORIES, ROUTE_LABELS, SEVERITY_LABELS, SEX_LABELS, SYMPTOM_CATEGORIES } from '@/lib/labels';
 import { EMERGENCY_SIGNS } from '@/lib/emergency';
 import { Button } from '@/components/ui/button';
 import { LogoMark } from '@/components/layout/Logo';
@@ -285,6 +286,40 @@ function Summary({ cat, data, prefs }: { cat: Cat; data: CatData; prefs: UnitPre
       ) : (
         <Empty>No weights recorded in the last year.</Empty>
       )}
+      {(cat.targetWeightKg != null || latestOf(data.measurements, 'bcs')) && (
+        <p className="mt-1 text-sm">
+          {cat.targetWeightKg != null && (
+            <>
+              Target weight: <strong>{formatMeasurement('weight', cat.targetWeightKg, prefs)}</strong> ({cat.targetWeightSetBy === 'veterinarian' ? 'set by vet' : 'set by owner'}).{' '}
+            </>
+          )}
+          {latestOf(data.measurements, 'bcs') && (
+            <>
+              Body condition: <strong>{latestOf(data.measurements, 'bcs')!.value} / 9</strong> ({formatDate(latestOf(data.measurements, 'bcs')!.measuredAt)}, owner-scored).
+            </>
+          )}
+        </p>
+      )}
+
+      <H>Diet</H>
+      {data.diets.length ? (
+        <ul className="space-y-0.5 text-sm">
+          {[...data.diets]
+            .sort((a, b) => b.startDate.localeCompare(a.startDate))
+            .slice(0, 5)
+            .map((d) => (
+              <li key={d.id}>
+                <strong>{d.foodName}</strong>
+                {d.brand ? ` (${d.brand})` : ''} — {FOOD_TYPES[d.type].toLowerCase()}
+                {d.portion ? `, ${d.portion}` : ''} · {formatDate(d.startDate)}
+                {d.endDate ? ` – ${formatDate(d.endDate)}` : ' – now'}
+                {d.reasonForChange && d.endDate ? ` (changed: ${d.reasonForChange})` : ''}
+              </li>
+            ))}
+        </ul>
+      ) : (
+        <Empty>No diet recorded.</Empty>
+      )}
 
       <H>Owner observations — last 60 days</H>
       {obs.length ? (
@@ -364,7 +399,22 @@ function Sitter({ cat, data, prefs, clinicPhone }: { cat: Cat; data: CatData; pr
       )}
 
       <H>Feeding</H>
-      {cat.feedingNotes ? <p className="whitespace-pre-wrap text-sm">{cat.feedingNotes}</p> : <Empty>No feeding routine entered (edit the cat profile to add one).</Empty>}
+      {currentDiets(data.diets).length > 0 && (
+        <ul className="mb-1 text-sm">
+          {currentDiets(data.diets).map((d) => (
+            <li key={d.id}>
+              <strong>{d.foodName}</strong>
+              {d.brand ? ` (${d.brand})` : ''}
+              {d.portion ? ` — ${d.portion}` : ''}
+            </li>
+          ))}
+        </ul>
+      )}
+      {cat.feedingNotes ? (
+        <p className="whitespace-pre-wrap text-sm">{cat.feedingNotes}</p>
+      ) : (
+        currentDiets(data.diets).length === 0 && <Empty>No feeding routine entered (edit the cat profile to add one).</Empty>
+      )}
 
       <H>Medications to give</H>
       {meds.length ? (
@@ -395,6 +445,20 @@ function Sitter({ cat, data, prefs, clinicPhone }: { cat: Cat; data: CatData; pr
           {conditions.length ? <p className="text-sm">{conditions.map((d) => d.name).join(', ')}</p> : <Empty>None recorded.</Empty>}
         </section>
       </div>
+
+      {data.routines.length > 0 && (
+        <>
+          <H>Care tasks while I'm away</H>
+          <ul className="space-y-0.5 text-sm">
+            {data.routines.map((r) => (
+              <li key={r.id}>
+                {routineLabel(r)} — next due {formatDate(routineStatus(r).nextDue)}
+                {r.product ? ` (${r.product})` : ''}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <H>Care tips</H>
       {cat.sitterNotes ? <p className="whitespace-pre-wrap text-sm">{cat.sitterNotes}</p> : <Empty>No care tips entered.</Empty>}

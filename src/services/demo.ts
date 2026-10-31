@@ -8,6 +8,7 @@ import { createMedication, recordDose, slotIso } from './medications';
 import { createRecord } from './records';
 import { createVaccination } from './vaccinations';
 import { getPrefs, updatePrefs } from './prefs';
+import { addDiet, addQuickLog, addRoutine } from './care';
 
 /**
  * FICTIONAL demonstration data. Every row is flagged `isDemo: true` and stored
@@ -314,6 +315,31 @@ export async function seedDemoData(): Promise<void> {
   for (let i = 0; i < 7; i++) {
     await addMeasurement({ catId: oliver.id, type: 'activity', value: 30 + ((i * 13) % 25), measuredAt: at(-7 + i, 19) }, { ...demo, silent: true });
   }
+
+  // Batch 3 sample data: diet, routines, counters, stock, weight goal, body condition.
+  await addDiet({ catId: luna.id, foodName: 'Dental dry formula (sample)', brand: 'Sample Brand', type: 'dry', portion: '25 g twice a day', startDate: d(-60) }, demo);
+  await addDiet({ catId: luna.id, foodName: 'Chicken-free wet food (sample)', type: 'wet', portion: '½ pouch in the evening', startDate: d(-200) }, demo);
+  await addDiet({ catId: milo.id, foodName: 'Senior wet food (sample)', type: 'wet', portion: '1 pouch twice a day', startDate: d(-300), endDate: d(-121) }, demo);
+  await addDiet(
+    { catId: milo.id, foodName: 'Thyroid support diet (sample)', type: 'prescription', portion: 'As advised by the vet', startDate: d(-120), reasonForChange: 'Recommended by the vet after diagnosis' },
+    { ...demo, replaceCurrent: true },
+  );
+  await addRoutine({ catId: luna.id, kind: 'nails', title: 'Nail trim', intervalDays: 14, startDate: d(-30), doneDates: [d(-16)], remindersEnabled: true }, demo);
+  await addRoutine({ catId: luna.id, kind: 'flea', title: 'Flea treatment', intervalDays: 30, startDate: d(-60), doneDates: [d(-28)], product: 'Spot-on (sample)', remindersEnabled: true }, demo);
+  await addRoutine({ catId: luna.id, kind: 'deworm', title: 'Deworming', intervalDays: 90, startDate: d(-100), doneDates: [d(-45)], remindersEnabled: true }, demo);
+  await addRoutine({ catId: oliver.id, kind: 'brushing', title: 'Brushing', intervalDays: 3, startDate: d(-10), doneDates: [d(-2)], remindersEnabled: false }, demo);
+  for (const [k, n] of [['pee', 2], ['poop', 1], ['water', 1]] as const) {
+    for (let i = 0; i < n; i++) await addQuickLog(luna.id, k, at(0, 7 + i * 3), demo);
+  }
+  for (let day = -6; day <= -1; day++) {
+    await addQuickLog(luna.id, 'pee', at(day, 8), demo);
+    await addQuickLog(luna.id, 'pee', at(day, 19), demo);
+    await addQuickLog(luna.id, 'poop', at(day, 9), demo);
+  }
+  await db.medications.update(methimazole.id, { stockCount: 7, refillWarningDays: 5 });
+  await db.cats.update(milo.id, { targetWeightKg: 5.6, targetWeightSetBy: 'veterinarian' });
+  await addMeasurement({ catId: luna.id, type: 'bcs', value: 5, measuredAt: at(-62, 10) }, { ...demo, silent: true });
+  await addMeasurement({ catId: milo.id, type: 'bcs', value: 4, measuredAt: at(-10, 10) }, { ...demo, silent: true });
 
   const prefs = await getPrefs();
   if (!prefs.selectedCatId) await updatePrefs({ selectedCatId: luna.id });

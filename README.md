@@ -16,6 +16,9 @@ Local-first, offline-capable, installable web app. No accounts, no cloud — eve
 - Themes: light / dark / auto, 9 colour themes and a custom colour (contrast-checked)
 - Printable / PDF: vet visit summary, pet sitter card, lost-cat poster
 - Emergency screen: warning signs, common poisons, one-tap call to your vet and emergency contact
+- Food & diet history with food changes · weight goal and body condition score
+- One-tap litter box & water counters · grooming / flea / deworming routines with reminders
+- Medicine stock tracking with low-stock refill warnings
 
 ## Tech stack
 

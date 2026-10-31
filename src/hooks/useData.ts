@@ -28,7 +28,8 @@ export function useSelectedCat(): { cat: Cat | null | undefined; cats: Cat[] | u
 export function useCatData(catId: string | undefined) {
   return useLiveQuery(async () => {
     if (!catId) return null;
-    const [records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents] = await Promise.all([
+    const since = new Date(Date.now() - 35 * 86_400_000).toISOString();
+    const [records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines] = await Promise.all([
       db.medicalRecords.where('catId').equals(catId).toArray(),
       db.medications.where('catId').equals(catId).toArray(),
       db.medicationSchedules.where('catId').equals(catId).toArray(),
@@ -40,8 +41,11 @@ export function useCatData(catId: string | undefined) {
       db.diagnoses.where('catId').equals(catId).toArray(),
       // Metadata only for lists; the blob stays in IndexedDB until opened.
       db.documents.where('catId').equals(catId).toArray(),
+      db.diets.where('catId').equals(catId).toArray(),
+      db.quickLogs.where('[catId+at]').between([catId, since], [catId, '\uffff']).toArray(),
+      db.routines.where('catId').equals(catId).toArray(),
     ]);
-    return { records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents };
+    return { records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines };
   }, [catId]);
 }
 

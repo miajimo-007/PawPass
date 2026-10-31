@@ -13,12 +13,12 @@ export type ExportScope = 'full' | 'cats' | 'records' | 'medications' | 'vaccina
 
 export const EXPORT_SCOPES: Record<ExportScope, { label: string; tables: DataTableName[] }> = {
   full: { label: 'Complete backup', tables: [...DATA_TABLES] },
-  cats: { label: 'Cat profiles', tables: ['cats', 'allergies', 'diagnoses', 'clinics'] },
+  cats: { label: 'Cat profiles', tables: ['cats', 'allergies', 'diagnoses', 'clinics', 'diets', 'routines'] },
   records: { label: 'Medical records', tables: ['medicalRecords'] },
   medications: { label: 'Medications', tables: ['medications', 'medicationSchedules', 'medicationLogs'] },
   vaccinations: { label: 'Vaccinations', tables: ['vaccinations'] },
   appointments: { label: 'Appointments', tables: ['appointments'] },
-  measurements: { label: 'Health measurements', tables: ['measurements', 'symptomLogs'] },
+  measurements: { label: 'Health measurements', tables: ['measurements', 'symptomLogs', 'quickLogs'] },
   documents: { label: 'Documents', tables: ['documents'] },
 };
 
@@ -134,6 +134,9 @@ const requiredFields: Partial<Record<DataTableName, string[]>> = {
   measurements: ['type', 'value', 'measuredAt'],
   symptomLogs: ['category', 'observedAt'],
   documents: ['title', 'blob', 'mimeType'],
+  diets: ['foodName', 'type', 'startDate'],
+  quickLogs: ['kind', 'at'],
+  routines: ['kind', 'title', 'intervalDays', 'startDate'],
 };
 
 const envelopeSchema = z.object({

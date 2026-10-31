@@ -45,6 +45,9 @@ export interface Cat extends BaseEntity {
   feedingNotes?: string;
   /** Care tips for a sitter: hiding spots, litter, temperament. */
   sitterNotes?: string;
+  /** Target weight in kg, ideally agreed with the veterinarian. */
+  targetWeightKg?: number;
+  targetWeightSetBy?: 'veterinarian' | 'owner';
 }
 
 export type RecordCategory =
@@ -119,6 +122,10 @@ export interface Medication extends BaseEntity {
   condition?: string;
   status: MedicationStatus;
   documentIds: ID[];
+  /** Doses (tablets, ml, applications…) currently in stock. Decreases when a dose is recorded as given. */
+  stockCount?: number;
+  /** Warn when the stock will run out within this many days. */
+  refillWarningDays?: number;
 }
 
 /** Times of day at which the owner wants a dose reminder. */
@@ -177,7 +184,8 @@ export interface Clinic extends BaseEntity {
   phone?: string;
 }
 
-export type MeasurementType = 'weight' | 'water' | 'activity';
+/** bcs = body condition score on the 1–9 veterinary scale. */
+export type MeasurementType = 'weight' | 'water' | 'activity' | 'bcs';
 
 export interface Measurement extends BaseEntity {
   catId: ID;
@@ -226,7 +234,50 @@ export interface DocumentFile extends BaseEntity {
   notes?: string;
 }
 
-export type NotificationKind = 'medication' | 'appointment' | 'vaccination' | 'storage';
+export type FoodType = 'dry' | 'wet' | 'raw' | 'homemade' | 'prescription' | 'treat' | 'other';
+
+/** A food the cat eats (or ate). Changing food = ending one diet and starting another. */
+export interface Diet extends BaseEntity {
+  catId: ID;
+  foodName: string;
+  brand?: string;
+  type: FoodType;
+  /** Free text, e.g. "40 g twice a day". */
+  portion?: string;
+  startDate: ISODate;
+  endDate?: ISODate;
+  reasonForChange?: string;
+  notes?: string;
+}
+
+export type QuickLogKind = 'pee' | 'poop' | 'water' | 'litter';
+
+/** One-tap counters for litter box and water bowl. */
+export interface QuickLog extends BaseEntity {
+  catId: ID;
+  kind: QuickLogKind;
+  at: ISODateTime;
+  note?: string;
+}
+
+export type RoutineKind = 'nails' | 'brushing' | 'teeth' | 'bath' | 'flea' | 'deworm' | 'litter' | 'other';
+
+/** A repeating care task: nail trims, flea/tick and deworming treatments, litter change… */
+export interface Routine extends BaseEntity {
+  catId: ID;
+  kind: RoutineKind;
+  title: string;
+  intervalDays: number;
+  /** Dates (YYYY-MM-DD) when the task was done, newest first. */
+  doneDates: ISODate[];
+  /** First due date when never done yet. */
+  startDate: ISODate;
+  remindersEnabled: boolean;
+  product?: string;
+  notes?: string;
+}
+
+export type NotificationKind = 'medication' | 'appointment' | 'vaccination' | 'storage' | 'routine' | 'refill';
 
 /** A reminder that has been shown to the user (prevents duplicate alerts). */
 export interface AppNotification extends BaseEntity {

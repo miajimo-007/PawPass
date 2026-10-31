@@ -68,23 +68,38 @@ export async function deleteMedication(id: string) {
 }
 
 /** Records a dose as given or skipped. Re-recording the same slot replaces the previous entry. */
+/** Adjusts stock when a dose changes to/from "given". Only applies when stock is being tracked. */
+async function adjustStock(medicationId: string, delta: number) {
+  if (!delta) return;
+  const m = await db.medications.get(medicationId);
+  if (!m || m.stockCount == null) return;
+  await db.medications.update(medicationId, { stockCount: Math.max(0, m.stockCount + delta), updatedAt: nowIso() });
+}
+
 export async function recordDose(med: Pick<Medication, 'id' | 'catId' | 'name'>, scheduledFor: string, status: DoseStatus, note?: string) {
   return safeWrite(() =>
-    db.transaction('rw', [db.medicationLogs, db.auditEvents], async () => {
+    db.transaction('rw', [db.medicationLogs, db.medications, db.auditEvents], async () => {
       const existing = await db.medicationLogs.where('[medicationId+scheduledFor]').equals([med.id, scheduledFor]).first();
+      const wasGiven = existing?.status === 'given';
       if (existing) {
         await db.medicationLogs.update(existing.id, { status, note, recordedAt: nowIso(), updatedAt: nowIso() });
       } else {
         await db.medicationLogs.add(stamp(clean({ medicationId: med.id, catId: med.catId, scheduledFor, status, recordedAt: nowIso(), note })) as MedicationLog);
       }
+      await adjustStock(med.id, status === 'given' && !wasGiven ? -1 : status !== 'given' && wasGiven ? 1 : 0);
       await audit('update', 'medicationLog', `${med.name}: dose marked ${status}`, med.id, med.catId);
     }),
   );
 }
 
-/** Removes a dose entry, returning the slot to "not recorded". */
+/** Removes a dose entry, returning the slot to "not recorded" (and restoring stock if it was given). */
 export async function clearDose(medicationId: string, scheduledFor: string) {
-  await db.medicationLogs.where('[medicationId+scheduledFor]').equals([medicationId, scheduledFor]).delete();
+  await db.transaction('rw', [db.medicationLogs, db.medications], async () => {
+    const existing = await db.medicationLogs.where('[medicationId+scheduledFor]').equals([medicationId, scheduledFor]).first();
+    if (!existing) return;
+    await db.medicationLogs.delete(existing.id);
+    if (existing.status === 'given') await adjustStock(medicationId, 1);
+  });
 }
 
 export interface DoseSlot {

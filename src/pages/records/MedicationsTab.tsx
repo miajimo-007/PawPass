@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { CheckCircle2, Pencil, Pill, Square, Trash2 } from 'lucide-react';
+import { CheckCircle2, PackagePlus, Pencil, Pill, Square, Trash2 } from 'lucide-react';
+import { needsRefill, stockDaysLeft } from '@/services/care';
 import { toast } from 'sonner';
 import type { Medication } from '@/db/types';
 import type { CatData } from '@/hooks/useData';
@@ -40,6 +41,7 @@ export function MedicationsTab({ catId, data }: { catId: string; data: CatData }
 
   const menu = (m: Medication) => [
     { label: 'Edit', icon: Pencil, onSelect: () => act({ type: 'medication', edit: m }) },
+    { label: 'Update stock', icon: PackagePlus, onSelect: () => act({ type: 'refill', medication: m }) },
     ...(m.status === 'active'
       ? [{ label: 'Mark completed', icon: CheckCircle2, onSelect: () => setMedicationStatus(m.id, 'completed').then(() => toast.success(`${m.name} marked completed`)) }]
       : [{ label: 'Mark active', icon: Square, onSelect: () => setMedicationStatus(m.id, 'active') }]),
@@ -77,7 +79,15 @@ export function MedicationsTab({ catId, data }: { catId: string; data: CatData }
         {active.length ? (
           <div className="grid gap-3 lg:grid-cols-2">
             {active.map((m) => (
-              <MedCard key={m.id} m={m} times={data.schedules.find((s) => s.medicationId === m.id)?.times ?? []} menu={menu(m)} />
+              <MedCard
+                key={m.id}
+                m={m}
+                times={data.schedules.find((s) => s.medicationId === m.id)?.times ?? []}
+                daysLeft={stockDaysLeft(m, data.schedules)}
+                low={needsRefill(m, data.schedules)}
+                onRefill={() => act({ type: 'refill', medication: m })}
+                menu={menu(m)}
+              />
             ))}
           </div>
         ) : (
@@ -120,7 +130,21 @@ export function MedicationsTab({ catId, data }: { catId: string; data: CatData }
   );
 }
 
-function MedCard({ m, times, menu }: { m: Medication; times: string[]; menu: React.ComponentProps<typeof ItemMenu>['items'] }) {
+function MedCard({
+  m,
+  times,
+  menu,
+  daysLeft,
+  low,
+  onRefill,
+}: {
+  m: Medication;
+  times: string[];
+  menu: React.ComponentProps<typeof ItemMenu>['items'];
+  daysLeft?: number;
+  low?: boolean;
+  onRefill?: () => void;
+}) {
   return (
     <Card>
       <CardHeader className="pb-0">
@@ -143,6 +167,20 @@ function MedCard({ m, times, menu }: { m: Medication; times: string[]; menu: Rea
           {m.condition ? ` · for ${m.condition}` : ''}
         </p>
         {times.length > 0 && <p>Reminder times: <span className="font-semibold tabular">{times.join(', ')}</span></p>}
+        {m.stockCount != null && (
+          <div className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 ${low ? 'bg-warning-soft text-warning' : 'bg-muted'}`}>
+            <span>
+              <strong className="tabular">{m.stockCount}</strong> in stock
+              {daysLeft !== undefined && ` · about ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}
+              {low && ' — refill soon'}
+            </span>
+            {onRefill && (
+              <Button size="sm" variant="outline" onClick={onRefill}>
+                <PackagePlus aria-hidden /> Refill
+              </Button>
+            )}
+          </div>
+        )}
         {m.instructions && <p className="whitespace-pre-wrap rounded-lg bg-muted px-3 py-2">{m.instructions}</p>}
         <LinkedDocuments ids={m.documentIds ?? []} />
       </CardContent>

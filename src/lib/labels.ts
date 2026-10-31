@@ -3,6 +3,9 @@ import type {
   AppointmentStatus,
   ConditionStatus,
   DocumentCategory,
+  FoodType,
+  QuickLogKind,
+  RoutineKind,
   MeasurementType,
   MedicationRoute,
   NeuterStatus,
@@ -68,6 +71,7 @@ export const MEASUREMENT_LABELS: Record<MeasurementType, string> = {
   weight: 'Weight',
   water: 'Water intake',
   activity: 'Active play',
+  bcs: 'Body condition',
 };
 
 export const SYMPTOM_CATEGORIES: Record<SymptomCategory, string> = {
@@ -97,6 +101,34 @@ export const DOCUMENT_CATEGORIES: Record<DocumentCategory, string> = {
   photo: 'Medical photograph',
   vaccination: 'Vaccination certificate',
   other: 'Other',
+};
+
+export const FOOD_TYPES: Record<FoodType, string> = {
+  dry: 'Dry food',
+  wet: 'Wet food',
+  raw: 'Raw',
+  homemade: 'Home-made',
+  prescription: 'Prescription diet',
+  treat: 'Treats',
+  other: 'Other',
+};
+
+export const QUICK_LOG_LABELS: Record<QuickLogKind, string> = {
+  pee: 'Pee',
+  poop: 'Poop',
+  water: 'Water refill',
+  litter: 'Litter cleaned',
+};
+
+export const ROUTINE_KINDS: Record<RoutineKind, { label: string; days: number }> = {
+  nails: { label: 'Nail trim', days: 14 },
+  brushing: { label: 'Brushing', days: 7 },
+  teeth: { label: 'Tooth brushing', days: 1 },
+  bath: { label: 'Bath', days: 90 },
+  flea: { label: 'Flea / tick treatment', days: 30 },
+  deworm: { label: 'Deworming', days: 90 },
+  litter: { label: 'Full litter change', days: 14 },
+  other: { label: 'Other', days: 30 },
 };
 
 export function options<T extends string>(map: Record<T, string>): { value: T; label: string }[] {

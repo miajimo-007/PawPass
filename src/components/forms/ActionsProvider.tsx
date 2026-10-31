@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import type {
   Appointment,
   Cat,
+  Diet,
+  Routine,
   DocumentFile,
   Measurement,
   MeasurementType,
@@ -22,6 +24,7 @@ import { AppointmentForm, CompleteAppointmentForm } from './AppointmentForm';
 import { MeasurementForm, SymptomForm } from './HealthForms';
 import { DocumentForm } from './DocumentForm';
 import { AllergyForm, ConditionForm } from './ProfileForms';
+import { DietForm, RefillForm, RoutineForm, WeightGoalForm } from './CareForms';
 
 export type Action =
   | { type: 'cat'; edit?: Cat }
@@ -34,7 +37,11 @@ export type Action =
   | { type: 'document'; catId?: string; edit?: DocumentFile }
   | { type: 'complete-appointment'; appointment: Appointment }
   | { type: 'allergy'; catId: string }
-  | { type: 'condition'; catId: string };
+  | { type: 'condition'; catId: string }
+  | { type: 'diet'; catId?: string; edit?: Diet; change?: boolean }
+  | { type: 'routine'; catId?: string; edit?: Routine }
+  | { type: 'weight-goal'; cat: Cat }
+  | { type: 'refill'; medication: Medication };
 
 const ActionsContext = React.createContext<(a: Action) => void>(() => {});
 
@@ -68,6 +75,14 @@ function titleFor(a: Action): { title: string; description?: string; size?: 'md'
       return { title: 'Add allergy' };
     case 'condition':
       return { title: 'Add medical condition' };
+    case 'diet':
+      return { title: a.edit ? 'Edit food' : a.change ? 'Change food' : 'Add food' };
+    case 'routine':
+      return { title: a.edit ? 'Edit care routine' : 'Add care routine' };
+    case 'weight-goal':
+      return { title: `${a.cat.name}'s weight goal` };
+    case 'refill':
+      return { title: `Refill ${a.medication.name}` };
   }
 }
 
@@ -134,6 +149,18 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'condition':
         body = <ConditionForm catId={action.catId} onDone={close} />;
+        break;
+      case 'diet':
+        body = <DietForm catId={catFor(action)} edit={action.edit} change={action.change} onDone={close} />;
+        break;
+      case 'routine':
+        body = <RoutineForm catId={catFor(action)} edit={action.edit} onDone={close} />;
+        break;
+      case 'weight-goal':
+        body = <WeightGoalForm cat={action.cat} onDone={close} />;
+        break;
+      case 'refill':
+        body = <RefillForm medication={action.medication} onDone={close} />;
         break;
     }
   }

@@ -105,6 +105,8 @@ export const medicationFormSchema = z
     reminderTimes: z.array(timeOfDay).max(8),
     remindersEnabled: z.boolean(),
     documentIds: z.array(z.string()),
+    stockCount: z.string().regex(/^\d{0,5}$/, 'Enter a whole number').optional(),
+    refillWarningDays: z.string().regex(/^\d{0,3}$/, 'Enter a whole number of days').optional(),
   })
   .refine((v) => !v.endDate || v.endDate >= v.startDate, { path: ['endDate'], message: 'End date is before start date' });
 export type MedicationFormValues = z.infer<typeof medicationFormSchema>;
@@ -144,7 +146,7 @@ export type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 export const measurementFormSchema = z
   .object({
     catId: z.string().min(1, 'Choose a cat'),
-    type: z.enum(['weight', 'water', 'activity']),
+    type: z.enum(['weight', 'water', 'activity', 'bcs']),
     value: z.string().min(1, 'Enter a value'),
     measuredAt: z.string().min(1, 'Choose when this was measured'),
     note: optionalText(500),
@@ -152,6 +154,7 @@ export const measurementFormSchema = z
   .superRefine((v, ctx) => {
     const n = Number(v.value);
     if (!Number.isFinite(n) || n <= 0) ctx.addIssue({ code: 'custom', path: ['value'], message: 'Enter a positive number' });
+    if (v.type === 'bcs' && (!Number.isInteger(n) || n < 1 || n > 9)) ctx.addIssue({ code: 'custom', path: ['value'], message: 'Body condition is a whole number from 1 to 9' });
   });
 export type MeasurementFormValues = z.infer<typeof measurementFormSchema>;
 

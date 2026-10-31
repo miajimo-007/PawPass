@@ -61,6 +61,15 @@ export const migrations: Migration[] = [
       }
     },
   },
+  {
+    version: 3,
+    description: 'Diet history, litter/water quick logs and care routines',
+    stores: {
+      diets: 'id, catId, startDate',
+      quickLogs: 'id, catId, kind, at, [catId+at]',
+      routines: 'id, catId, kind',
+    },
+  },
 ];
 
 export const LATEST_DB_VERSION = migrations[migrations.length - 1].version;

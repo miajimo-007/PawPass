@@ -24,6 +24,7 @@ export interface UnitPrefs {
 export function unitLabel(type: MeasurementType, p: UnitPrefs): string {
   if (type === 'weight') return p.weightUnit;
   if (type === 'water') return p.volumeUnit === 'ml' ? 'ml' : 'fl oz';
+  if (type === 'bcs') return '/ 9';
   return 'min';
 }
 
@@ -41,6 +42,7 @@ export function fromDisplay(type: MeasurementType, v: number, p: UnitPrefs): num
 
 export function formatMeasurement(type: MeasurementType, canonical: number, p: UnitPrefs): string {
   const v = toDisplay(type, canonical, p);
+  if (type === 'bcs') return `${v.toFixed(0)} / 9`;
   const digits = type === 'weight' ? 2 : type === 'water' && p.volumeUnit === 'floz' ? 1 : 0;
   return `${v.toFixed(digits)} ${unitLabel(type, p)}`;
 }

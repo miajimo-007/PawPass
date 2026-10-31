@@ -1,6 +1,10 @@
 import * as React from 'react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Activity, Droplets, LineChart, Pencil, Plus, Scale, ThermometerSun, Trash2 } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Activity, Droplets, Gauge, LineChart, Pencil, Plus, Scale, Target, ThermometerSun, Trash2 } from 'lucide-react';
+import { weightGoalDelta } from '@/services/care';
+import { TodayCard } from './health/TodayCard';
+import { DietCard } from './health/DietCard';
+import { RoutinesCard } from './health/RoutinesCard';
 import { toast } from 'sonner';
 import type { MeasurementType, SymptomCategory } from '@/db/types';
 import { useCatData, useSelectedCat } from '@/hooks/useData';
@@ -27,7 +31,7 @@ const RANGE_OPTIONS: { value: Range; label: string }[] = [
   { value: '365', label: '1 year' },
   { value: 'all', label: 'All' },
 ];
-const METRIC_ICONS: Record<MeasurementType, typeof Scale> = { weight: Scale, water: Droplets, activity: Activity };
+const METRIC_ICONS: Record<MeasurementType, typeof Scale> = { weight: Scale, water: Droplets, activity: Activity, bcs: Gauge };
 
 export function HealthPage() {
   const { cat, prefs } = useSelectedCat();
@@ -51,6 +55,9 @@ export function HealthPage() {
   const latest = latestOf(data.measurements, metric);
   const trend = trendOf(data.measurements, metric);
   const unit = unitLabel(metric, prefs);
+  const goal = cat.targetWeightKg;
+  const goalDelta = weightGoalDelta(latestOf(data.measurements, 'weight')?.value, goal);
+  const goalDisplay = goal != null ? Number(toDisplay('weight', goal, prefs).toFixed(2)) : undefined;
 
   const symptoms = data.symptoms
     .filter((s) => symptomFilter === 'all' || s.category === symptomFilter)
@@ -69,6 +76,8 @@ export function HealthPage() {
           </Button>
         }
       />
+
+      <TodayCard catId={cat.id} logs={data.quickLogs} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented label="Measurement" value={metric} onChange={setMetric} options={options(MEASUREMENT_LABELS)} />
@@ -95,6 +104,25 @@ export function HealthPage() {
                 </>
               )}
             </p>
+            {metric === 'weight' && (
+              <button
+                type="button"
+                onClick={() => act({ type: 'weight-goal', cat })}
+                className="mt-1.5 inline-flex min-h-8 items-center gap-1.5 text-[13px] font-semibold text-primary hover:underline"
+              >
+                <Target className="h-4 w-4" aria-hidden />
+                {goal != null
+                  ? `Goal ${formatMeasurement('weight', goal, prefs)}${cat.targetWeightSetBy === 'veterinarian' ? ' (vet)' : ''}${
+                      goalDelta != null
+                        ? Math.abs(goalDelta) < 0.05
+                          ? ' · on target'
+                          : ` · ${formatMeasurement('weight', Math.abs(goalDelta), prefs)} ${goalDelta > 0 ? 'above' : 'below'}`
+                        : ''
+                    }`
+                  : 'Set a weight goal'}
+              </button>
+            )}
+            {metric === 'bcs' && <p className="mt-1 text-[12.5px] text-muted-foreground">1 = very thin · 5 = ideal · 9 = obese. Ask your vet to show you how to score.</p>}
           </div>
           <Button size="sm" variant="secondary" onClick={() => act({ type: 'measurement', catId: cat.id, measurementType: metric })}>
             <Plus aria-hidden /> Add
@@ -122,7 +150,7 @@ export function HealthPage() {
                       minTickGap={24}
                     />
                     <YAxis
-                      domain={['auto', 'auto']}
+                      domain={metric === 'bcs' ? [1, 9] : ['auto', 'auto']}
                       tick={{ fontSize: 11, fill: color('--muted-foreground') }}
                       tickLine={false}
                       axisLine={false}
@@ -134,6 +162,15 @@ export function HealthPage() {
                       contentStyle={{ borderRadius: 10, border: `1px solid ${color('--border')}`, background: color('--card'), color: color('--foreground'), fontSize: 12 }}
                     />
                     <Area type="monotone" dataKey="v" stroke={color('--primary')} strokeWidth={2} fill="url(#fillMetric)" dot={{ r: 3, fill: color('--primary') }} activeDot={{ r: 5 }} />
+                    {metric === 'weight' && goalDisplay != null && (
+                      <ReferenceLine
+                        y={goalDisplay}
+                        ifOverflow="extendDomain"
+                        stroke={color('--muted-foreground')}
+                        strokeDasharray="5 4"
+                        label={{ value: 'Goal', position: 'insideTopRight', fill: color('--muted-foreground'), fontSize: 11 }}
+                      />
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -183,6 +220,10 @@ export function HealthPage() {
           </ul>
         )}
       </Card>
+
+      <DietCard catId={cat.id} diets={data.diets} />
+
+      <RoutinesCard catId={cat.id} routines={data.routines} />
 
       <Card>
         <CardHeader>

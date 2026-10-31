@@ -1,5 +1,6 @@
 import { db } from '@/db/database';
-import type { AppNotification, Appointment, Cat, Medication, MedicationLog, MedicationSchedule, Vaccination } from '@/db/types';
+import type { AppNotification, Appointment, Cat, Medication, MedicationLog, MedicationSchedule, Routine, Vaccination } from '@/db/types';
+import { needsRefill, routineLabel, routineStatus, stockDaysLeft } from './care';
 import { addDays, toISODate } from '@/lib/dates';
 import { nowIso, uuid } from '@/lib/utils';
 import { buildDoseSlots } from './medications';
@@ -30,6 +31,7 @@ export function computeDueReminders(
     logs: MedicationLog[];
     appointments: Appointment[];
     vaccinations: Vaccination[];
+    routines?: Routine[];
   },
   now = new Date(),
 ): DueReminder[] {
@@ -85,6 +87,34 @@ export function computeDueReminders(
       dueAt: v.nextDueDate! + 'T09:00:00',
     });
   }
+  for (const r of data.routines ?? []) {
+    if (!r.remindersEnabled) continue;
+    const st = routineStatus(r, now);
+    if (st.state !== 'overdue' && st.state !== 'due') continue;
+    out.push({
+      key: `routine:${r.id}:${st.nextDue}`,
+      kind: 'routine',
+      catId: r.catId,
+      refId: r.id,
+      title: `${name(r.catId)}: ${routineLabel(r)} ${st.state === 'overdue' ? 'overdue' : 'due today'}`,
+      body: r.product ? `Product: ${r.product}` : 'Mark it done in Health → Care routines.',
+      dueAt: st.nextDue + 'T09:00:00',
+    });
+  }
+
+  for (const m of data.medications) {
+    if (!needsRefill(m, data.schedules)) continue;
+    const left = stockDaysLeft(m, data.schedules);
+    out.push({
+      key: `refill:${m.id}:${toISODate(now)}`,
+      kind: 'refill',
+      catId: m.catId,
+      refId: m.id,
+      title: `${name(m.catId)}: ${m.name} running low`,
+      body: left !== undefined ? `About ${left} day${left === 1 ? '' : 's'} left (${m.stockCount} in stock). Arrange a refill with your vet.` : 'Out of stock.',
+      dueAt: now.toISOString(),
+    });
+  }
   return out;
 }
 
@@ -116,13 +146,14 @@ export async function claimNewReminders(due: DueReminder[]): Promise<DueReminder
 }
 
 export async function loadReminderData() {
-  const [cats, medications, schedules, logs, appointments, vaccinations] = await Promise.all([
+  const [cats, medications, schedules, logs, appointments, vaccinations, routines] = await Promise.all([
     db.cats.toArray(),
     db.medications.where('status').equals('active').toArray(),
     db.medicationSchedules.toArray(),
     db.medicationLogs.where('scheduledFor').above(addDays(new Date(), -2).toISOString()).toArray(),
     db.appointments.where('status').equals('scheduled').toArray(),
     db.vaccinations.toArray(),
+    db.routines.toArray(),
   ]);
-  return { cats, medications, schedules, logs, appointments, vaccinations };
+  return { cats, medications, schedules, logs, appointments, vaccinations, routines };
 }

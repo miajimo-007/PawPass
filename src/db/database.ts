@@ -7,6 +7,9 @@ import type {
   AuditEvent,
   Cat,
   Clinic,
+  Diet,
+  QuickLog,
+  Routine,
   Diagnosis,
   DocumentFile,
   Measurement,
@@ -38,6 +41,9 @@ export class PawpassDB extends Dexie {
   notifications!: Table<AppNotification, string>;
   preferences!: Table<Preferences, string>;
   auditEvents!: Table<AuditEvent, string>;
+  diets!: Table<Diet, string>;
+  quickLogs!: Table<QuickLog, string>;
+  routines!: Table<Routine, string>;
 
   constructor(name = DB_NAME, upToVersion?: number) {
     super(name);
@@ -64,6 +70,9 @@ export const DATA_TABLES = [
   'measurements',
   'symptomLogs',
   'documents',
+  'diets',
+  'quickLogs',
+  'routines',
 ] as const;
 
 export type DataTableName = (typeof DATA_TABLES)[number];
