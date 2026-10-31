@@ -63,7 +63,8 @@ export function DocumentViewerDialog({ doc, onOpenChange }: { doc: DocumentFile 
 
 /** Compact list of documents linked to a record, opening the viewer on tap. */
 export function LinkedDocuments({ ids }: { ids: string[] }) {
-  const docs = useLiveQuery(() => (ids.length ? db.documents.bulkGet(ids) : Promise.resolve([])), [ids.join(',')]) ?? [];
+  const docs: (DocumentFile | undefined)[] =
+    useLiveQuery(async (): Promise<(DocumentFile | undefined)[]> => (ids.length ? db.documents.bulkGet(ids) : []), [ids.join(',')]) ?? [];
   const [open, setOpen] = React.useState<DocumentFile | null>(null);
   const present = docs.filter((d): d is DocumentFile => !!d);
   if (!present.length) return null;
