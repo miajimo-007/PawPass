@@ -248,6 +248,12 @@ export interface Preferences {
   remindersEnabled: boolean;
   lastBackupAt?: ISODateTime;
   onboardingDismissed?: boolean;
+  /** Appearance: light, dark or follow the device. */
+  themeMode?: 'light' | 'dark' | 'system';
+  /** Accent preset id (see src/lib/theme.ts) or 'custom'. */
+  accentId?: string;
+  /** Custom accent colour as #RRGGBB when accentId is 'custom'. */
+  customAccent?: string;
   updatedAt: ISODateTime;
 }
 
