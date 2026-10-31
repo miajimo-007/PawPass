@@ -12,7 +12,10 @@ import { errorMessage } from '@/services/errors';
 import { formatDateTime } from '@/lib/dates';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Input, Select } from '@/components/ui/input';
+import { defaultCurrency } from '@/services/expenses';
+
+const CURRENCIES = ['SAR', 'AED', 'KWD', 'QAR', 'BHD', 'OMR', 'EGP', 'JOD', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'INR', 'JPY', 'CHF'];
 import { Field } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Segmented, Switch } from '@/components/ui/misc';
@@ -103,6 +106,18 @@ export function ProfilePage() {
               ]}
               size="sm"
             />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="currency" className="text-sm font-semibold">
+              Currency
+            </label>
+            <Select id="currency" className="h-9 w-32 text-[13px]" value={prefs.currency ?? defaultCurrency()} onChange={(e) => updatePrefs({ currency: e.target.value })}>
+              {[...new Set([prefs.currency ?? defaultCurrency(), ...CURRENCIES])].map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
           </div>
           <Switch
             id="reminders"

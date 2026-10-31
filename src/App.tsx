@@ -20,6 +20,7 @@ import { DataPage } from '@/pages/DataPage';
 import { InstallPage, PrivacyPage } from '@/pages/InfoPages';
 import { PrintPage } from '@/pages/PrintPage';
 import { EmergencyPage } from '@/pages/EmergencyPage';
+import { FoundPage } from '@/pages/FoundPage';
 
 function NotFound() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
           <ActionsProvider>
             <Routes>
               <Route path="print/:kind/:id" element={<PrintPage />} />
+              <Route path="found" element={<FoundPage />} />
               <Route element={<AppShell />}>
                 <Route index element={<HomePage />} />
                 <Route path="cats" element={<CatsPage />} />

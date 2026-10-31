@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Download, FileText, HeartHandshake, PawPrint, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Download, FileText, HeartHandshake, Lightbulb, PawPrint, Pencil, Plus, QrCode, Search, Trash2, X } from 'lucide-react';
+import { lifeStageFor } from '@/lib/lifeStage';
 import { toast } from 'sonner';
 import { db } from '@/db/database';
 import type { ConditionStatus } from '@/db/types';
@@ -53,6 +54,7 @@ export function CatDetailPage() {
   if (!data) return <PageSkeleton />;
 
   const latestWeight = latestOf(data.measurements, 'weight');
+  const stage = lifeStageFor(cat.birthDate);
 
   const onDelete = async () => {
     const n = await countCatData(cat.id);
@@ -144,6 +146,7 @@ export function CatDetailPage() {
               <KeyValue label="Microchip" value={cat.microchip} />
               <KeyValue label="Primary veterinarian" value={cat.primaryVet} />
               <KeyValue label="Clinic" value={cat.primaryClinic} />
+              <KeyValue label="Insurance" value={[cat.insuranceProvider, cat.insurancePolicy].filter(Boolean).join(' · ')} />
             </dl>
             {cat.notes && <p className="mt-3 whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">{cat.notes}</p>}
           </CardContent>
@@ -262,15 +265,41 @@ export function CatDetailPage() {
         </div>
       </div>
 
+      {stage && (
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-primary" aria-hidden /> {stage.label} care checklist
+              </CardTitle>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                General guidance for cats aged {stage.ageRange}. Your vet's advice always comes first.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <ul className="space-y-1.5 text-sm">
+              {stage.tips.map((t) => (
+                <li key={t} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Share & print</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-2 pt-2 sm:grid-cols-3">
+        <CardContent className="grid gap-2 pt-2 sm:grid-cols-2">
           {[
             { kind: 'summary', icon: FileText, title: 'Vet visit summary', text: 'History, meds, vaccines, weight' },
             { kind: 'sitter', icon: HeartHandshake, title: 'Pet sitter card', text: 'Feeding, meds, contacts' },
             { kind: 'poster', icon: Search, title: 'Lost cat poster', text: 'Photo, description, your phone' },
+            { kind: 'tag', icon: QrCode, title: 'Collar QR tag', text: 'Finder scans, sees how to reach you' },
           ].map(({ kind, icon: Icon, title, text }) => (
             <Link key={kind} to={`/print/${kind}/${cat.id}`} className="flex items-center gap-3 rounded-xl border p-3 hover:bg-muted">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">

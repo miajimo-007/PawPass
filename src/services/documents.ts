@@ -42,7 +42,7 @@ export async function updateDocument(id: string, meta: DocumentMeta) {
 
 /** Deletes a document and removes it from every record that referenced it. */
 export async function deleteDocument(id: string) {
-  await db.transaction('rw', [db.documents, db.medicalRecords, db.medications, db.vaccinations, db.auditEvents], async () => {
+  await db.transaction('rw', [db.documents, db.medicalRecords, db.medications, db.vaccinations, db.symptomLogs, db.expenses, db.auditEvents], async () => {
     const doc = await db.documents.get(id);
     if (!doc) return;
     const unlink = (row: { documentIds?: string[] }) => {
@@ -51,6 +51,10 @@ export async function deleteDocument(id: string) {
     await db.medicalRecords.where('catId').equals(doc.catId).modify(unlink);
     await db.medications.where('catId').equals(doc.catId).modify(unlink);
     await db.vaccinations.where('catId').equals(doc.catId).modify(unlink);
+    await db.expenses.where('catId').equals(doc.catId).modify(unlink);
+    await db.symptomLogs.where('catId').equals(doc.catId).modify((row: { mediaIds?: string[] }) => {
+      if (row.mediaIds?.includes(id)) row.mediaIds = row.mediaIds.filter((d) => d !== id);
+    });
     await db.documents.delete(id);
     await audit('delete', 'document', `Deleted document: ${doc.title}`, id, doc.catId);
   });
@@ -58,6 +62,10 @@ export async function deleteDocument(id: string) {
 
 export function isImage(mime: string) {
   return mime.startsWith('image/') && !/heic|heif/.test(mime);
+}
+
+export function isVideo(mime: string) {
+  return mime.startsWith('video/');
 }
 
 export function isPdf(mime: string) {

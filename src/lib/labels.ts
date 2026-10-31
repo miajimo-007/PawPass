@@ -3,6 +3,8 @@ import type {
   AppointmentStatus,
   ConditionStatus,
   DocumentCategory,
+  ClaimStatus,
+  ExpenseCategory,
   FoodType,
   QuickLogKind,
   RoutineKind,
@@ -99,6 +101,7 @@ export const DOCUMENT_CATEGORIES: Record<DocumentCategory, string> = {
   imaging: 'Imaging report',
   invoice: 'Veterinary invoice',
   photo: 'Medical photograph',
+  video: 'Video',
   vaccination: 'Vaccination certificate',
   other: 'Other',
 };
@@ -129,6 +132,25 @@ export const ROUTINE_KINDS: Record<RoutineKind, { label: string; days: number }>
   deworm: { label: 'Deworming', days: 90 },
   litter: { label: 'Full litter change', days: 14 },
   other: { label: 'Other', days: 30 },
+};
+
+export const EXPENSE_CATEGORIES: Record<ExpenseCategory, string> = {
+  vet: 'Vet visit',
+  medication: 'Medication',
+  food: 'Food',
+  insurance: 'Insurance premium',
+  grooming: 'Grooming',
+  supplies: 'Supplies & litter',
+  boarding: 'Boarding / sitter',
+  other: 'Other',
+};
+
+export const CLAIM_STATUS: Record<ClaimStatus, string> = {
+  none: 'No claim',
+  'to-submit': 'To submit',
+  submitted: 'Claim submitted',
+  paid: 'Claim paid',
+  rejected: 'Claim rejected',
 };
 
 export function options<T extends string>(map: Record<T, string>): { value: T; label: string }[] {

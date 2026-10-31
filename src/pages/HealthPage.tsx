@@ -3,6 +3,7 @@ import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Too
 import { Activity, Droplets, Gauge, LineChart, Pencil, Plus, Scale, Target, ThermometerSun, Trash2 } from 'lucide-react';
 import { weightGoalDelta } from '@/services/care';
 import { TodayCard } from './health/TodayCard';
+import { MediaThumbs } from '@/components/shared/DocumentViewer';
 import { DietCard } from './health/DietCard';
 import { RoutinesCard } from './health/RoutinesCard';
 import { toast } from 'sonner';
@@ -265,6 +266,7 @@ export function HealthPage() {
                       <Badge tone="outline">Owner observation</Badge>
                     </div>
                     {s.notes && <p className="mt-1.5 whitespace-pre-wrap text-[13px]">{s.notes}</p>}
+                    {s.mediaIds && s.mediaIds.length > 0 && <MediaThumbs ids={s.mediaIds} />}
                   </div>
                   <ItemMenu
                     label={`Options for observation: ${s.description}`}

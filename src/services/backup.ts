@@ -9,7 +9,7 @@ import { updatePrefs } from './prefs';
 export const BACKUP_FORMAT = 'pawpass-backup';
 export const BACKUP_FORMAT_VERSION = 1;
 
-export type ExportScope = 'full' | 'cats' | 'records' | 'medications' | 'vaccinations' | 'appointments' | 'measurements' | 'documents';
+export type ExportScope = 'full' | 'cats' | 'records' | 'medications' | 'vaccinations' | 'appointments' | 'measurements' | 'documents' | 'costs';
 
 export const EXPORT_SCOPES: Record<ExportScope, { label: string; tables: DataTableName[] }> = {
   full: { label: 'Complete backup', tables: [...DATA_TABLES] },
@@ -20,6 +20,7 @@ export const EXPORT_SCOPES: Record<ExportScope, { label: string; tables: DataTab
   appointments: { label: 'Appointments', tables: ['appointments'] },
   measurements: { label: 'Health measurements', tables: ['measurements', 'symptomLogs', 'quickLogs'] },
   documents: { label: 'Documents', tables: ['documents'] },
+  costs: { label: 'Costs & insurance', tables: ['expenses'] },
 };
 
 interface EncodedBlob {
@@ -137,6 +138,7 @@ const requiredFields: Partial<Record<DataTableName, string[]>> = {
   diets: ['foodName', 'type', 'startDate'],
   quickLogs: ['kind', 'at'],
   routines: ['kind', 'title', 'intervalDays', 'startDate'],
+  expenses: ['date', 'category', 'amount', 'currency'],
 };
 
 const envelopeSchema = z.object({

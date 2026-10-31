@@ -1,4 +1,9 @@
-import { Bell, CalendarClock, CheckCircle2, MapPin, Pencil, Phone, Trash2, XCircle } from 'lucide-react';
+import { Bell, CalendarClock, CalendarPlus, CheckCircle2, MapPin, Pencil, Phone, Trash2, XCircle } from 'lucide-react';
+import { buildIcs, type IcsEvent } from '@/lib/ics';
+import { downloadBlob } from '@/services/documents';
+import { dueVaccinations } from '@/services/vaccinations';
+import { routineLabel, routineNextDue } from '@/services/care';
+import { toISODate } from '@/lib/dates';
 import { toast } from 'sonner';
 import type { Appointment } from '@/db/types';
 import type { CatData } from '@/hooks/useData';
@@ -13,6 +18,22 @@ import { useConfirm } from '@/components/ui/confirm';
 import { EmptyState, SectionHeader } from '@/components/ui/misc';
 import { ItemMenu } from '@/components/shared/ItemMenu';
 
+function appointmentEvent(a: Appointment, catName: string): IcsEvent {
+  return {
+    uid: `${a.id}@pawpass`,
+    title: `${catName}: ${a.title}`,
+    start: a.dateTime,
+    durationMinutes: 60,
+    location: [a.clinic, a.clinicAddress].filter(Boolean).join(', ') || undefined,
+    description: [a.veterinarian && `Vet: ${a.veterinarian}`, a.clinicPhone && `Phone: ${a.clinicPhone}`, a.preparationNotes].filter(Boolean).join('\n') || undefined,
+    alarmMinutes: a.reminderMinutes ?? null,
+  };
+}
+
+function exportIcs(events: IcsEvent[], fileName: string) {
+  downloadBlob(new Blob([buildIcs(events)], { type: 'text/calendar;charset=utf-8' }), fileName);
+}
+
 function reminderText(min?: number | null) {
   if (min == null) return null;
   if (min >= 1440) return `${min / 1440} day${min === 1440 ? '' : 's'} before`;
@@ -20,12 +41,31 @@ function reminderText(min?: number | null) {
   return `${min} min before`;
 }
 
-export function AppointmentsTab({ catId, data }: { catId: string; data: CatData }) {
+export function AppointmentsTab({ catId, catName, data }: { catId: string; catName: string; data: CatData }) {
   const act = useActions();
   const confirm = useConfirm();
   const upcoming = upcomingAppointments(data.appointments);
   const pastDue = pastDueAppointments(data.appointments);
   const past = data.appointments.filter((a) => a.status !== 'scheduled').sort((a, b) => b.dateTime.localeCompare(a.dateTime));
+
+  const exportAll = () => {
+    const today = toISODate(new Date());
+    const events: IcsEvent[] = [
+      ...upcoming.map((a) => appointmentEvent(a, catName)),
+      ...dueVaccinations(data.vaccinations)
+        .filter(({ v }) => v.nextDueDate! >= today)
+        .map(({ v }) => ({ uid: `${v.id}-due@pawpass`, title: `${catName}: ${v.vaccine} due (vet-confirmed)`, start: v.nextDueDate!, alarmMinutes: 24 * 60 })),
+      ...data.routines
+        .filter((r) => routineNextDue(r) >= today)
+        .map((r) => ({ uid: `${r.id}-${routineNextDue(r)}@pawpass`, title: `${catName}: ${routineLabel(r)}`, start: routineNextDue(r) })),
+    ];
+    if (!events.length) {
+      toast.info('Nothing upcoming to add to your calendar');
+      return;
+    }
+    exportIcs(events, `pawpass-${catName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-calendar.ics`);
+    toast.success(`${events.length} event${events.length === 1 ? '' : 's'} exported — open the file to add them to your calendar`);
+  };
 
   if (!data.appointments.length) {
     return (
@@ -43,6 +83,9 @@ export function AppointmentsTab({ catId, data }: { catId: string; data: CatData 
   const row = (a: Appointment) => {
     const items = [
       { label: 'Edit', icon: Pencil, onSelect: () => act({ type: 'appointment', edit: a }) },
+      ...(a.status === 'scheduled'
+        ? [{ label: 'Add to calendar', icon: CalendarPlus, onSelect: () => exportIcs([appointmentEvent(a, catName)], 'pawpass-appointment.ics') }]
+        : []),
       ...(a.status === 'scheduled'
         ? [
             { label: 'Mark completed', icon: CheckCircle2, onSelect: () => act({ type: 'complete-appointment', appointment: a }) },
@@ -106,6 +149,9 @@ export function AppointmentsTab({ catId, data }: { catId: string; data: CatData 
 
   return (
     <div className="space-y-5">
+      <Button variant="outline" onClick={exportAll} className="w-full sm:w-auto">
+        <CalendarPlus aria-hidden /> Add upcoming visits, vaccines & routines to calendar
+      </Button>
       {pastDue.length > 0 && (
         <section>
           <SectionHeader title="Needs an update" />

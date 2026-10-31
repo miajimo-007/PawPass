@@ -15,15 +15,18 @@ import { addDays, formatAge, formatDate, formatDateTime } from '@/lib/dates';
 import { formatMeasurement, toDisplay, unitLabel, type UnitPrefs } from '@/lib/units';
 import { FOOD_TYPES, ALLERGY_SEVERITY, CONDITION_STATUS, NEUTER_LABELS, RECORD_CATEGORIES, ROUTE_LABELS, SEVERITY_LABELS, SEX_LABELS, SYMPTOM_CATEGORIES } from '@/lib/labels';
 import { EMERGENCY_SIGNS } from '@/lib/emergency';
+import { foundTagUrl } from '@/lib/foundTag';
+import { QrCode } from '@/components/shared/QrCode';
 import { Button } from '@/components/ui/button';
 import { LogoMark } from '@/components/layout/Logo';
 
-export type PrintKind = 'summary' | 'sitter' | 'poster';
+export type PrintKind = 'summary' | 'sitter' | 'poster' | 'tag';
 
 const TITLES: Record<PrintKind, string> = {
   summary: 'Vet visit summary',
   sitter: 'Pet sitter card',
   poster: 'Lost cat poster',
+  tag: 'Collar QR tag',
 };
 
 /**
@@ -33,7 +36,7 @@ const TITLES: Record<PrintKind, string> = {
  */
 export function PrintPage() {
   const { kind = 'summary', id = '' } = useParams();
-  const k = (['summary', 'sitter', 'poster'].includes(kind) ? kind : 'summary') as PrintKind;
+  const k = (['summary', 'sitter', 'poster', 'tag'].includes(kind) ? kind : 'summary') as PrintKind;
   const cat = useLiveQuery(() => db.cats.get(id), [id], null);
   const data = useCatData(id);
   const prefs = usePrefs() ?? DEFAULT_PREFS;
@@ -69,6 +72,7 @@ export function PrintPage() {
         {k === 'summary' && <Summary cat={cat} data={data} prefs={prefs} />}
         {k === 'sitter' && <Sitter cat={cat} data={data} prefs={prefs} clinicPhone={clinic?.phone} />}
         {k === 'poster' && <Poster cat={cat} data={data} prefs={prefs} />}
+        {k === 'tag' && <Tag cat={cat} data={data} prefs={prefs} />}
       </article>
       <p className="no-print pb-8 text-center text-xs text-neutral-500">On iPhone: tap Print / PDF, then pinch out on the preview or use Share → Save to Files.</p>
     </div>
@@ -499,6 +503,80 @@ function Poster({ cat, data, prefs }: { cat: Cat; data: CatData; prefs: Preferen
       </div>
       {!prefs.ownerPhone && <p className="no-print mt-2 text-xs text-amber-700">Add your phone number in Profile → Contact details to fill this in.</p>}
       <p className="mx-auto mt-4 max-w-md text-sm text-neutral-600">Please do not chase. Check sheds and garages. Any vet can scan for a microchip.</p>
+    </div>
+  );
+}
+
+// ---- Collar QR tag ----------------------------------------------------------------------------
+
+function Tag({ cat, data, prefs }: { cat: Cat; data: CatData; prefs: Preferences }) {
+  const needsMeds = data.medications.some((m) => m.status === 'active');
+  const [includeName, setIncludeName] = React.useState(true);
+  const [includeHealth, setIncludeHealth] = React.useState(needsMeds || data.allergies.length > 0);
+  const [message, setMessage] = React.useState('Indoor cat — if I’m outside, I’m probably lost.');
+  const health = [needsMeds ? 'Needs daily medication' : '', data.allergies.length ? `Allergies: ${data.allergies.map((a) => a.allergen).join(', ')}` : '']
+    .filter(Boolean)
+    .join('. ');
+  const url = prefs.ownerPhone
+    ? foundTagUrl({ n: cat.name, p: prefs.ownerPhone, o: includeName ? prefs.ownerName : undefined, m: message, h: includeHealth ? health : undefined })
+    : '';
+
+  if (!prefs.ownerPhone) {
+    return (
+      <div className="text-center">
+        <h1 className="font-display text-2xl font-semibold">Add your phone number first</h1>
+        <p className="mt-2 text-sm text-neutral-600">The tag needs a number people can call. Add it in Profile → Contact details, then come back.</p>
+        <Button asChild className="mt-4">
+          <Link to="/profile">Open Profile</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="no-print mb-6 space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm">
+        <p className="font-semibold">What the tag shows when scanned</p>
+        <p className="text-neutral-600">
+          Always: {cat.name}’s name and your phone ({prefs.ownerPhone}). The details live only inside the QR code — nothing is uploaded.
+        </p>
+        <label className="flex min-h-11 items-center gap-3">
+          <input type="checkbox" className="h-5 w-5" checked={includeName} onChange={(e) => setIncludeName(e.target.checked)} disabled={!prefs.ownerName} />
+          Include my first name{prefs.ownerName ? ` (${prefs.ownerName})` : ' (add it in Profile)'}
+        </label>
+        <label className="flex min-h-11 items-center gap-3">
+          <input type="checkbox" className="h-5 w-5" checked={includeHealth} onChange={(e) => setIncludeHealth(e.target.checked)} disabled={!health} />
+          Include health note{health ? ` (“${health}”)` : ' (none recorded)'}
+        </label>
+        <label className="block">
+          <span className="font-medium">Message</span>
+          <input className="mt-1 h-11 w-full rounded-lg border border-neutral-300 px-3" maxLength={120} value={message} onChange={(e) => setMessage(e.target.value)} />
+        </label>
+        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block font-semibold text-emerald-800 underline">
+          Preview what finders will see
+        </a>
+      </div>
+
+      <div className="flex flex-wrap items-end justify-center gap-8">
+        {[
+          { size: 96, label: 'Collar tag (≈2.5 cm)' },
+          { size: 151, label: 'Large tag (≈4 cm)' },
+          { size: 227, label: 'Card / carrier (≈6 cm)' },
+        ].map(({ size, label }) => (
+          <figure key={size} className="flex flex-col items-center gap-2 break-inside-avoid">
+            <div className="rounded-lg border border-neutral-300 p-2">
+              <QrCode value={url} size={size} label={`QR code for ${cat.name}'s found-me page`} />
+            </div>
+            <figcaption className="text-center text-[11px] text-neutral-500">
+              <span className="block font-semibold text-neutral-800">Scan if found · {cat.name}</span>
+              {label}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <p className="no-print mt-6 text-center text-xs text-neutral-500">
+        Print on sticker paper or card and attach to the collar or carrier. Re-print if your phone number changes.
+      </p>
     </div>
   );
 }

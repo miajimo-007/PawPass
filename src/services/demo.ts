@@ -9,6 +9,7 @@ import { createRecord } from './records';
 import { createVaccination } from './vaccinations';
 import { getPrefs, updatePrefs } from './prefs';
 import { addDiet, addQuickLog, addRoutine } from './care';
+import { createExpense, defaultCurrency } from './expenses';
 
 /**
  * FICTIONAL demonstration data. Every row is flagged `isDemo: true` and stored
@@ -340,6 +341,12 @@ export async function seedDemoData(): Promise<void> {
   await db.cats.update(milo.id, { targetWeightKg: 5.6, targetWeightSetBy: 'veterinarian' });
   await addMeasurement({ catId: luna.id, type: 'bcs', value: 5, measuredAt: at(-62, 10) }, { ...demo, silent: true });
   await addMeasurement({ catId: milo.id, type: 'bcs', value: 4, measuredAt: at(-10, 10) }, { ...demo, silent: true });
+
+  const cur = (await getPrefs()).currency ?? defaultCurrency();
+  await createExpense({ catId: luna.id, date: d(-62), category: 'vet', amount: 450, currency: cur, description: 'Annual exam & blood panel (sample)', provider: 'Sample Oak Veterinary Clinic', claimStatus: 'paid', reimbursedAmount: 300, documentIds: [] }, demo);
+  await createExpense({ catId: luna.id, date: d(-60), category: 'food', amount: 120, currency: cur, description: 'Dental dry food 4 kg (sample)', claimStatus: 'none', documentIds: [] }, demo);
+  await createExpense({ catId: milo.id, date: d(-95), category: 'vet', amount: 380, currency: cur, description: 'T4 recheck (sample)', provider: 'Sample Harbour Animal Hospital', claimStatus: 'submitted', documentIds: [] }, demo);
+  await createExpense({ catId: milo.id, date: d(-30), category: 'medication', amount: 95, currency: cur, description: 'Methimazole refill (sample)', claimStatus: 'to-submit', documentIds: [] }, demo);
 
   const prefs = await getPrefs();
   if (!prefs.selectedCatId) await updatePrefs({ selectedCatId: luna.id });

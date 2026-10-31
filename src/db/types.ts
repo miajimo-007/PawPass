@@ -45,6 +45,8 @@ export interface Cat extends BaseEntity {
   feedingNotes?: string;
   /** Care tips for a sitter: hiding spots, litter, temperament. */
   sitterNotes?: string;
+  insuranceProvider?: string;
+  insurancePolicy?: string;
   /** Target weight in kg, ideally agreed with the veterinarian. */
   targetWeightKg?: number;
   targetWeightSetBy?: 'veterinarian' | 'owner';
@@ -218,9 +220,11 @@ export interface SymptomLog extends BaseEntity {
   level?: 'decreased' | 'normal' | 'increased';
   observedAt: ISODateTime;
   notes?: string;
+  /** Photos/videos stored as documents. */
+  mediaIds?: ID[];
 }
 
-export type DocumentCategory = 'report' | 'lab' | 'prescription' | 'imaging' | 'invoice' | 'photo' | 'vaccination' | 'other';
+export type DocumentCategory = 'report' | 'lab' | 'prescription' | 'imaging' | 'invoice' | 'photo' | 'video' | 'vaccination' | 'other';
 
 export interface DocumentFile extends BaseEntity {
   catId: ID;
@@ -277,6 +281,24 @@ export interface Routine extends BaseEntity {
   notes?: string;
 }
 
+export type ExpenseCategory = 'vet' | 'medication' | 'food' | 'insurance' | 'grooming' | 'supplies' | 'boarding' | 'other';
+export type ClaimStatus = 'none' | 'to-submit' | 'submitted' | 'paid' | 'rejected';
+
+/** A cost for a cat (vet bill, food, insurance premium…), optionally with an insurance claim. */
+export interface Expense extends BaseEntity {
+  catId: ID;
+  date: ISODate;
+  category: ExpenseCategory;
+  amount: number;
+  currency: string; // ISO 4217, e.g. "SAR"
+  description: string;
+  provider?: string;
+  claimStatus: ClaimStatus;
+  reimbursedAmount?: number;
+  documentIds: ID[];
+  notes?: string;
+}
+
 export type NotificationKind = 'medication' | 'appointment' | 'vaccination' | 'storage' | 'routine' | 'refill';
 
 /** A reminder that has been shown to the user (prevents duplicate alerts). */
@@ -306,6 +328,8 @@ export interface Preferences {
   ownerPhone?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  /** Currency used for costs (ISO 4217). */
+  currency?: string;
   onboardingDismissed?: boolean;
   /** Appearance: light, dark or follow the device. */
   themeMode?: 'light' | 'dark' | 'system';

@@ -70,6 +70,13 @@ export const migrations: Migration[] = [
       routines: 'id, catId, kind',
     },
   },
+  {
+    version: 4,
+    description: 'Costs & insurance claims',
+    stores: {
+      expenses: 'id, catId, date, category, claimStatus',
+    },
+  },
 ];
 
 export const LATEST_DB_VERSION = migrations[migrations.length - 1].version;

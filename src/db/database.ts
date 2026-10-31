@@ -8,6 +8,7 @@ import type {
   Cat,
   Clinic,
   Diet,
+  Expense,
   QuickLog,
   Routine,
   Diagnosis,
@@ -44,6 +45,7 @@ export class PawpassDB extends Dexie {
   diets!: Table<Diet, string>;
   quickLogs!: Table<QuickLog, string>;
   routines!: Table<Routine, string>;
+  expenses!: Table<Expense, string>;
 
   constructor(name = DB_NAME, upToVersion?: number) {
     super(name);
@@ -73,6 +75,7 @@ export const DATA_TABLES = [
   'diets',
   'quickLogs',
   'routines',
+  'expenses',
 ] as const;
 
 export type DataTableName = (typeof DATA_TABLES)[number];

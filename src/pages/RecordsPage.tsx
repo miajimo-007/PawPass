@@ -11,6 +11,7 @@ import { MedicationsTab } from './records/MedicationsTab';
 import { VaccinationsTab } from './records/VaccinationsTab';
 import { AppointmentsTab } from './records/AppointmentsTab';
 import { DocumentsTab } from './records/DocumentsTab';
+import { CostsTab } from './records/CostsTab';
 
 const TABS = [
   { value: 'timeline', label: 'Timeline' },
@@ -18,6 +19,7 @@ const TABS = [
   { value: 'vaccinations', label: 'Vaccines' },
   { value: 'appointments', label: 'Visits' },
   { value: 'documents', label: 'Documents' },
+  { value: 'costs', label: 'Costs' },
 ] as const;
 type Tab = (typeof TABS)[number]['value'];
 
@@ -27,6 +29,7 @@ const ADD_LABEL: Record<Tab, string> = {
   vaccinations: 'Add vaccination',
   appointments: 'New appointment',
   documents: 'Upload',
+  costs: 'Add cost',
 };
 
 export function RecordsPage() {
@@ -48,7 +51,9 @@ export function RecordsPage() {
           ? { type: 'vaccination', catId: cat.id }
           : tab === 'appointments'
             ? { type: 'appointment', catId: cat.id }
-            : { type: 'document', catId: cat.id };
+            : tab === 'documents'
+              ? { type: 'document', catId: cat.id }
+              : { type: 'expense', catId: cat.id };
 
   return (
     <div className="space-y-4">
@@ -79,9 +84,11 @@ export function RecordsPage() {
       ) : tab === 'vaccinations' ? (
         <VaccinationsTab catId={cat.id} data={data} />
       ) : tab === 'appointments' ? (
-        <AppointmentsTab catId={cat.id} data={data} />
-      ) : (
+        <AppointmentsTab catId={cat.id} catName={cat.name} data={data} />
+      ) : tab === 'documents' ? (
         <DocumentsTab catId={cat.id} data={data} />
+      ) : (
+        <CostsTab cat={cat} data={data} />
       )}
     </div>
   );

@@ -37,6 +37,8 @@ export const catFormSchema = z
     notes: optionalText(4000),
     feedingNotes: optionalText(2000),
     sitterNotes: optionalText(2000),
+    insuranceProvider: optionalText(120),
+    insurancePolicy: optionalText(60),
   })
   .superRefine((v, ctx) => {
     if (v.ageMode === 'dob' && v.birthDate && !notFuture(v.birthDate)) {
@@ -172,7 +174,7 @@ export type SymptomFormValues = z.infer<typeof symptomFormSchema>;
 export const documentFormSchema = z.object({
   catId: z.string().min(1, 'Choose a cat'),
   title: requiredText('Title', 160),
-  category: z.enum(['report', 'lab', 'prescription', 'imaging', 'invoice', 'photo', 'vaccination', 'other']),
+  category: z.enum(['report', 'lab', 'prescription', 'imaging', 'invoice', 'photo', 'video', 'vaccination', 'other']),
   date: isoDate,
   notes: optionalText(2000),
 });
@@ -188,13 +190,23 @@ export const ALLOWED_DOCUMENT_TYPES = [
   'image/gif',
   'text/plain',
 ];
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'];
 export const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
+
+export function isVideoFile(file: { type: string; name: string }): boolean {
+  return ALLOWED_VIDEO_TYPES.includes(file.type) || /\.(mp4|mov|m4v|webm|3gp)$/i.test(file.name);
+}
 
 export function validateUpload(file: { type: string; size: number; name: string }): string | null {
-  const typeOk = ALLOWED_DOCUMENT_TYPES.includes(file.type) || /\.(pdf|jpe?g|png|webp|heic|heif|gif|txt)$/i.test(file.name);
-  if (!typeOk) return 'Use a PDF, image (JPEG, PNG, WebP, HEIC) or text file.';
-  if (file.size > MAX_DOCUMENT_BYTES) return 'Files must be 25 MB or smaller.';
   if (file.size === 0) return 'This file is empty.';
+  if (isVideoFile(file)) {
+    if (file.size > MAX_VIDEO_BYTES) return 'Videos must be 60 MB or smaller. Try a shorter clip.';
+    return null;
+  }
+  const typeOk = ALLOWED_DOCUMENT_TYPES.includes(file.type) || /\.(pdf|jpe?g|png|webp|heic|heif|gif|txt)$/i.test(file.name);
+  if (!typeOk) return 'Use a PDF, image (JPEG, PNG, WebP, HEIC), video (MP4, MOV) or text file.';
+  if (file.size > MAX_DOCUMENT_BYTES) return 'Files must be 25 MB or smaller.';
   return null;
 }
 

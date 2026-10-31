@@ -19,6 +19,8 @@ Local-first, offline-capable, installable web app. No accounts, no cloud — eve
 - Food & diet history with food changes · weight goal and body condition score
 - One-tap litter box & water counters · grooming / flea / deworming routines with reminders
 - Medicine stock tracking with low-stock refill warnings
+- Photo & video diary on observations · costs, yearly spend and insurance claims
+- Life-stage care checklist · calendar export (.ics) · collar QR "found me" tag (data lives only in the QR code)
 
 ## Tech stack
 

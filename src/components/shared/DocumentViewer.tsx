@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Download, ExternalLink, FileText, Image as ImageIcon } from 'lucide-react';
+import { Download, ExternalLink, FileText, Image as ImageIcon, Play } from 'lucide-react';
 import { db } from '@/db/database';
 import type { DocumentFile } from '@/db/types';
-import { downloadBlob, isImage, isPdf } from '@/services/documents';
+import { downloadBlob, isImage, isPdf, isVideo } from '@/services/documents';
 import { useObjectUrl } from '@/hooks/useObjectUrl';
 import { formatDate } from '@/lib/dates';
 import { DOCUMENT_CATEGORIES } from '@/lib/labels';
@@ -18,6 +18,8 @@ export function DocumentPreview({ doc }: { doc: DocumentFile }) {
     <div className="space-y-4">
       {isImage(doc.mimeType) ? (
         <img src={url} alt={doc.title} className="mx-auto max-h-[60dvh] w-auto rounded-lg border object-contain" />
+      ) : isVideo(doc.mimeType) ? (
+        <video src={url} controls playsInline className="mx-auto max-h-[60dvh] w-full rounded-lg border bg-black" />
       ) : isPdf(doc.mimeType) ? (
         <iframe src={url} title={doc.title} className="h-[60dvh] w-full rounded-lg border bg-white" />
       ) : (
@@ -82,6 +84,38 @@ export function LinkedDocuments({ ids }: { ids: string[] }) {
           </li>
         ))}
       </ul>
+      <DocumentViewerDialog doc={open} onOpenChange={(o) => !o && setOpen(null)} />
+    </div>
+  );
+}
+
+function Thumb({ doc, onOpen }: { doc: DocumentFile; onOpen: () => void }) {
+  const url = useObjectUrl(isImage(doc.mimeType) ? doc.blob : null);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`Open ${doc.title}`}
+      className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted"
+    >
+      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : isVideo(doc.mimeType) ? <Play className="h-6 w-6 text-muted-foreground" aria-hidden /> : <FileText className="h-5 w-5 text-muted-foreground" aria-hidden />}
+      {isVideo(doc.mimeType) && <span className="absolute bottom-0.5 right-1 rounded bg-black/60 px-1 text-[10px] font-semibold text-white">video</span>}
+    </button>
+  );
+}
+
+/** Small photo/video thumbnails for an observation. */
+export function MediaThumbs({ ids }: { ids: string[] }) {
+  const docs: (DocumentFile | undefined)[] =
+    useLiveQuery(async (): Promise<(DocumentFile | undefined)[]> => (ids.length ? db.documents.bulkGet(ids) : []), [ids.join(',')]) ?? [];
+  const [open, setOpen] = React.useState<DocumentFile | null>(null);
+  const present = docs.filter((d): d is DocumentFile => !!d);
+  if (!present.length) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {present.map((d) => (
+        <Thumb key={d.id} doc={d} onOpen={() => setOpen(d)} />
+      ))}
       <DocumentViewerDialog doc={open} onOpenChange={(o) => !o && setOpen(null)} />
     </div>
   );

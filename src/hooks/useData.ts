@@ -29,7 +29,7 @@ export function useCatData(catId: string | undefined) {
   return useLiveQuery(async () => {
     if (!catId) return null;
     const since = new Date(Date.now() - 35 * 86_400_000).toISOString();
-    const [records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines] = await Promise.all([
+    const [records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines, expenses] = await Promise.all([
       db.medicalRecords.where('catId').equals(catId).toArray(),
       db.medications.where('catId').equals(catId).toArray(),
       db.medicationSchedules.where('catId').equals(catId).toArray(),
@@ -44,8 +44,9 @@ export function useCatData(catId: string | undefined) {
       db.diets.where('catId').equals(catId).toArray(),
       db.quickLogs.where('[catId+at]').between([catId, since], [catId, '\uffff']).toArray(),
       db.routines.where('catId').equals(catId).toArray(),
+      db.expenses.where('catId').equals(catId).toArray(),
     ]);
-    return { records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines };
+    return { records, medications, schedules, vaccinations, appointments, measurements, symptoms, allergies, diagnoses, documents, diets, quickLogs, routines, expenses };
   }, [catId]);
 }
 

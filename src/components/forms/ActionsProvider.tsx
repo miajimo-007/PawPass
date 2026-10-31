@@ -4,6 +4,7 @@ import type {
   Appointment,
   Cat,
   Diet,
+  Expense,
   Routine,
   DocumentFile,
   Measurement,
@@ -25,6 +26,7 @@ import { MeasurementForm, SymptomForm } from './HealthForms';
 import { DocumentForm } from './DocumentForm';
 import { AllergyForm, ConditionForm } from './ProfileForms';
 import { DietForm, RefillForm, RoutineForm, WeightGoalForm } from './CareForms';
+import { ExpenseForm } from './ExpenseForm';
 
 export type Action =
   | { type: 'cat'; edit?: Cat }
@@ -41,7 +43,8 @@ export type Action =
   | { type: 'diet'; catId?: string; edit?: Diet; change?: boolean }
   | { type: 'routine'; catId?: string; edit?: Routine }
   | { type: 'weight-goal'; cat: Cat }
-  | { type: 'refill'; medication: Medication };
+  | { type: 'refill'; medication: Medication }
+  | { type: 'expense'; catId?: string; edit?: Expense };
 
 const ActionsContext = React.createContext<(a: Action) => void>(() => {});
 
@@ -83,6 +86,8 @@ function titleFor(a: Action): { title: string; description?: string; size?: 'md'
       return { title: `${a.cat.name}'s weight goal` };
     case 'refill':
       return { title: `Refill ${a.medication.name}` };
+    case 'expense':
+      return { title: a.edit ? 'Edit cost' : 'Add cost' };
   }
 }
 
@@ -161,6 +166,9 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'refill':
         body = <RefillForm medication={action.medication} onDone={close} />;
+        break;
+      case 'expense':
+        body = <ExpenseForm catId={catFor(action)} edit={action.edit} onDone={close} />;
         break;
     }
   }

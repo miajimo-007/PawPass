@@ -6,7 +6,7 @@ import type { DocumentCategory } from '@/db/types';
 import { useCats, useClinicNames } from '@/hooks/useData';
 import { addDocument } from '@/services/documents';
 import { formatBytes } from '@/lib/utils';
-import { validateUpload } from '@/validation/schemas';
+import { isVideoFile, validateUpload } from '@/validation/schemas';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
@@ -67,7 +67,17 @@ export interface AttachValue {
 export const emptyAttach = (ids: string[] = []): AttachValue => ({ existing: ids, pending: [] });
 
 /** Lets the user link existing documents of this cat and add new files. */
-export function DocumentAttachField({ catId, value, onChange }: { catId: string; value: AttachValue; onChange: (v: AttachValue) => void }) {
+export function DocumentAttachField({
+  catId,
+  value,
+  onChange,
+  label = 'Supporting documents',
+}: {
+  catId: string;
+  value: AttachValue;
+  onChange: (v: AttachValue) => void;
+  label?: string;
+}) {
   const docs = useLiveQuery(() => (catId ? db.documents.where('catId').equals(catId).toArray() : []), [catId]) ?? [];
   const [error, setError] = React.useState<string>();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -93,7 +103,7 @@ export function DocumentAttachField({ catId, value, onChange }: { catId: string;
   return (
     <div className="space-y-2">
       <p className="text-[13px] font-semibold">
-        Supporting documents <span className="font-normal text-muted-foreground">(optional)</span>
+        {label} <span className="font-normal text-muted-foreground">(optional)</span>
       </p>
       <ul className="space-y-1.5">
         {linked.map((d) => (
@@ -153,7 +163,7 @@ export function DocumentAttachField({ catId, value, onChange }: { catId: string;
         tabIndex={-1}
         aria-hidden
         multiple
-        accept="application/pdf,image/*,text/plain"
+        accept="application/pdf,image/*,video/*,text/plain"
         onChange={(e) => onFiles(e.target.files)}
       />
       {error && (
@@ -169,7 +179,8 @@ export function DocumentAttachField({ catId, value, onChange }: { catId: string;
 export async function persistAttachments(catId: string, value: AttachValue, date: string, category: DocumentCategory): Promise<string[]> {
   const ids = [...value.existing];
   for (const f of value.pending) {
-    const doc = await addDocument(f, { catId, title: f.name.replace(/\.[^.]+$/, ''), category: f.type.startsWith('image/') && category === 'report' ? 'photo' : category, date });
+    const cat: DocumentCategory = isVideoFile(f) ? 'video' : f.type.startsWith('image/') && category === 'report' ? 'photo' : category;
+    const doc = await addDocument(f, { catId, title: f.name.replace(/\.[^.]+$/, ''), category: cat, date });
     ids.push(doc.id);
   }
   return ids;

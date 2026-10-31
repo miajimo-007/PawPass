@@ -14,7 +14,7 @@ import { MEASUREMENT_LABELS, SEVERITY_LABELS, SYMPTOM_CATEGORIES, options } from
 import { Input, Select, Textarea } from '@/components/ui/input';
 import { Field, FormSection } from '@/components/ui/field';
 import { Segmented } from '@/components/ui/misc';
-import { CatSelect, SubmitBar } from './shared';
+import { CatSelect, DocumentAttachField, SubmitBar, emptyAttach, persistAttachments } from './shared';
 
 export function MeasurementForm({
   catId,
@@ -97,6 +97,7 @@ const LEVEL_CATEGORIES = new Set(['appetite', 'water', 'activity', 'urination'])
 
 export function SymptomForm({ catId, edit, onDone }: { catId: string; edit?: SymptomLog; onDone: () => void }) {
   const [saving, setSaving] = React.useState(false);
+  const [media, setMedia] = React.useState(emptyAttach(edit?.mediaIds));
   const { register, handleSubmit, watch, formState } = useForm<SymptomFormValues>({
     resolver: zodResolver(symptomFormSchema),
     defaultValues: {
@@ -111,11 +112,14 @@ export function SymptomForm({ catId, edit, onDone }: { catId: string; edit?: Sym
   });
   const e = formState.errors;
   const cat = watch('category');
+  const selectedCat = watch('catId');
 
   const onSubmit = handleSubmit(async (v) => {
     setSaving(true);
     try {
+      const mediaIds = await persistAttachments(v.catId, media, v.observedAt.slice(0, 10), 'photo');
       const input = {
+        mediaIds,
         catId: v.catId,
         category: v.category,
         description: v.description,
@@ -181,6 +185,7 @@ export function SymptomForm({ catId, edit, onDone }: { catId: string; edit?: Sym
         <Field label="Notes" htmlFor="sy-notes" optional>
           <Textarea {...register('notes')} />
         </Field>
+        <DocumentAttachField catId={selectedCat} value={media} onChange={setMedia} label="Photos or video" />
       </FormSection>
       <SubmitBar saving={saving} onCancel={onDone} label="Save observation" />
     </form>

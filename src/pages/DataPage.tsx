@@ -44,6 +44,10 @@ const TABLE_LABELS: Record<string, string> = {
   measurements: 'Measurements',
   symptomLogs: 'Observations',
   documents: 'Documents',
+  diets: 'Foods',
+  quickLogs: 'Litter & water counts',
+  routines: 'Care routines',
+  expenses: 'Costs',
 };
 
 export function DataPage() {

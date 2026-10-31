@@ -66,6 +66,8 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
       notes: edit?.notes ?? '',
       feedingNotes: edit?.feedingNotes ?? '',
       sitterNotes: edit?.sitterNotes ?? '',
+      insuranceProvider: edit?.insuranceProvider ?? '',
+      insurancePolicy: edit?.insurancePolicy ?? '',
     },
   });
   const { register, handleSubmit, watch, setValue, formState } = form;
@@ -103,6 +105,8 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
         notes: v.notes,
         feedingNotes: v.feedingNotes,
         sitterNotes: v.sitterNotes,
+        insuranceProvider: v.insuranceProvider,
+        insurancePolicy: v.insurancePolicy,
       };
       if (edit) {
         await updateCat(edit.id, { ...input, photo: photo ?? undefined });
@@ -243,6 +247,14 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
           </Field>
           <Field label="Clinic" htmlFor="cat-clinic" optional>
             <Input list="clinic-names" {...register('primaryClinic')} />
+          </Field>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Pet insurance" htmlFor="cat-ins" optional>
+            <Input {...register('insuranceProvider')} />
+          </Field>
+          <Field label="Policy number" htmlFor="cat-policy" optional>
+            <Input autoComplete="off" {...register('insurancePolicy')} />
           </Field>
         </div>
         <Field label="Notes" htmlFor="cat-notes" optional>
