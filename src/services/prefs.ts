@@ -9,6 +9,8 @@ export const DEFAULT_PREFS: Preferences = {
   weightUnit: 'kg',
   volumeUnit: 'ml',
   remindersEnabled: true,
+  themeMode: 'light',
+  accentId: 'forest',
   updatedAt: new Date(0).toISOString(),
 };
 
