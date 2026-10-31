@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Download, PawPrint, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Download, FileText, HeartHandshake, PawPrint, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/db/database';
 import type { ConditionStatus } from '@/db/types';
@@ -261,6 +261,29 @@ export function CatDetailPage() {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Share & print</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-2 pt-2 sm:grid-cols-3">
+          {[
+            { kind: 'summary', icon: FileText, title: 'Vet visit summary', text: 'History, meds, vaccines, weight' },
+            { kind: 'sitter', icon: HeartHandshake, title: 'Pet sitter card', text: 'Feeding, meds, contacts' },
+            { kind: 'poster', icon: Search, title: 'Lost cat poster', text: 'Photo, description, your phone' },
+          ].map(({ kind, icon: Icon, title, text }) => (
+            <Link key={kind} to={`/print/${kind}/${cat.id}`} className="flex items-center gap-3 rounded-xl border p-3 hover:bg-muted">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+                <Icon className="h-5 w-5" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">{title}</span>
+                <span className="block text-[12.5px] text-muted-foreground">{text}</span>
+              </span>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="flex flex-col gap-2 pt-4 sm:flex-row sm:items-center">

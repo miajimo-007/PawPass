@@ -64,6 +64,8 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
       primaryVet: edit?.primaryVet ?? '',
       primaryClinic: edit?.primaryClinic ?? '',
       notes: edit?.notes ?? '',
+      feedingNotes: edit?.feedingNotes ?? '',
+      sitterNotes: edit?.sitterNotes ?? '',
     },
   });
   const { register, handleSubmit, watch, setValue, formState } = form;
@@ -99,6 +101,8 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
         primaryVet: v.primaryVet,
         primaryClinic: v.primaryClinic,
         notes: v.notes,
+        feedingNotes: v.feedingNotes,
+        sitterNotes: v.sitterNotes,
       };
       if (edit) {
         await updateCat(edit.id, { ...input, photo: photo ?? undefined });
@@ -243,6 +247,15 @@ export function CatForm({ edit, onDone }: { edit?: Cat; onDone: (cat?: Cat) => v
         </div>
         <Field label="Notes" htmlFor="cat-notes" optional>
           <Textarea {...register('notes')} />
+        </Field>
+      </FormSection>
+
+      <FormSection title="For sitters">
+        <Field label="Feeding routine" htmlFor="cat-feeding" optional hint="Food, amounts and times. Shown on the pet sitter card.">
+          <Textarea rows={2} {...register('feedingNotes')} />
+        </Field>
+        <Field label="Care tips" htmlFor="cat-sitter" optional hint="Litter, hiding spots, temperament, things to avoid.">
+          <Textarea rows={2} {...register('sitterNotes')} />
         </Field>
       </FormSection>
 

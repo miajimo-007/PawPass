@@ -18,6 +18,8 @@ import { RecordsPage } from '@/pages/RecordsPage';
 import { ActivityPage, ProfilePage } from '@/pages/ProfilePage';
 import { DataPage } from '@/pages/DataPage';
 import { InstallPage, PrivacyPage } from '@/pages/InfoPages';
+import { PrintPage } from '@/pages/PrintPage';
+import { EmergencyPage } from '@/pages/EmergencyPage';
 
 function NotFound() {
   return (
@@ -47,6 +49,7 @@ export default function App() {
         <ConfirmProvider>
           <ActionsProvider>
             <Routes>
+              <Route path="print/:kind/:id" element={<PrintPage />} />
               <Route element={<AppShell />}>
                 <Route index element={<HomePage />} />
                 <Route path="cats" element={<CatsPage />} />
@@ -58,6 +61,7 @@ export default function App() {
                 <Route path="profile/privacy" element={<PrivacyPage />} />
                 <Route path="profile/install" element={<InstallPage />} />
                 <Route path="profile/activity" element={<ActivityPage />} />
+                <Route path="emergency" element={<EmergencyPage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>

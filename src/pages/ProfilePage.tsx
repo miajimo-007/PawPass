@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { BellRing, ChevronRight, Database, History, Info, Lock, Smartphone, Sparkles } from 'lucide-react';
+import { BellRing, ChevronRight, Database, History, Info, Lock, Siren, Smartphone, Sparkles } from 'lucide-react';
+import { ContactCard } from '@/components/shared/ContactCard';
 import { toast } from 'sonner';
 import { db } from '@/db/database';
 import { usePrefs } from '@/hooks/useData';
@@ -66,6 +67,8 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
+      <ContactCard />
+
       <AppearanceCard />
 
       <Card>
@@ -128,6 +131,7 @@ export function ProfilePage() {
 
       <Card className="divide-y overflow-hidden">
         {[
+          { to: '/emergency', icon: Siren, title: 'Emergency', text: 'Warning signs, poisons, call your vet' },
           { to: '/profile/data', icon: Database, title: 'Data management', text: 'Backup, restore, storage and deletion' },
           { to: '/profile/privacy', icon: Lock, title: 'Privacy & local storage', text: 'Where your records live' },
           { to: '/profile/install', icon: Smartphone, title: 'Install on your phone', text: 'Add PAWPASS to your Home Screen' },

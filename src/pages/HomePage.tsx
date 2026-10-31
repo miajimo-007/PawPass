@@ -10,6 +10,7 @@ import {
   HardDriveDownload,
   Pill,
   Scale,
+  Siren,
   ShieldCheck,
   Stethoscope,
   Syringe,
@@ -140,6 +141,14 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      <Link
+        to="/emergency"
+        className="flex min-h-11 items-center gap-3 rounded-xl border border-destructive/25 bg-destructive-soft/50 px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive-soft"
+      >
+        <Siren className="h-5 w-5" aria-hidden /> Emergency — warning signs, poisons & vet contacts
+        <ChevronRight className="ml-auto h-4 w-4" aria-hidden />
+      </Link>
 
       {needsBackup && (
         <Card className="border-warning/30 bg-warning-soft/50">

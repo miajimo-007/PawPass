@@ -35,6 +35,8 @@ export const catFormSchema = z
     primaryVet: optionalText(120),
     primaryClinic: optionalText(120),
     notes: optionalText(4000),
+    feedingNotes: optionalText(2000),
+    sitterNotes: optionalText(2000),
   })
   .superRefine((v, ctx) => {
     if (v.ageMode === 'dob' && v.birthDate && !notFuture(v.birthDate)) {

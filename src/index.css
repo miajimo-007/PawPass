@@ -83,6 +83,20 @@
   }
 }
 
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 @layer components {
   .skeleton {
     @apply rounded-md bg-muted;

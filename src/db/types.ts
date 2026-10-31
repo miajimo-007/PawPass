@@ -41,6 +41,10 @@ export interface Cat extends BaseEntity {
   primaryClinic?: string;
   notes?: string;
   archived?: boolean;
+  /** Feeding routine for sitters, e.g. "40 g wet food at 7am and 7pm". */
+  feedingNotes?: string;
+  /** Care tips for a sitter: hiding spots, litter, temperament. */
+  sitterNotes?: string;
 }
 
 export type RecordCategory =
@@ -247,6 +251,10 @@ export interface Preferences {
   volumeUnit: VolumeUnit;
   remindersEnabled: boolean;
   lastBackupAt?: ISODateTime;
+  /** Owner contact details used on the sitter card and lost-cat poster. */
+  ownerPhone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
   onboardingDismissed?: boolean;
   /** Appearance: light, dark or follow the device. */
   themeMode?: 'light' | 'dark' | 'system';

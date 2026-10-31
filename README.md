@@ -13,6 +13,9 @@ Local-first, offline-capable, installable web app. No accounts, no cloud — eve
 - JSON backup & restore with preview, duplicate detection and per-section export
 - Storage monitor, persistent-storage request, safe handling of quota errors
 - Fictional demo cats (Luna, Milo, Oliver) that can be reset or removed without touching your data
+- Themes: light / dark / auto, 9 colour themes and a custom colour (contrast-checked)
+- Printable / PDF: vet visit summary, pet sitter card, lost-cat poster
+- Emergency screen: warning signs, common poisons, one-tap call to your vet and emergency contact
 
 ## Tech stack
 
