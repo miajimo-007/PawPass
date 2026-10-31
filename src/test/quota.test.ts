@@ -37,7 +37,14 @@ describe('storage quota errors', () => {
     // Make the backup "new" by changing ids, then fail on the second table write.
     backup.tables.cats = backup.tables.cats!.map((c) => ({ ...c, id: 'new-cat', name: 'Imported' }));
     backup.tables.allergies = [{ id: 'a1', createdAt: '2025-01-01', catId: 'new-cat', allergen: 'Dust', severity: 'mild' }];
-    vi.spyOn(db.allergies, 'bulkPut').mockImplementationOnce(() => Promise.reject(quotaError()));
+    // Inside a transaction Dexie uses transaction-bound table objects, so patch the shared prototype
+    // and fail only the write to the allergies table.
+    const proto = Object.getPrototypeOf(db.allergies) as { bulkPut: (...args: unknown[]) => Promise<unknown> };
+    const originalBulkPut = proto.bulkPut;
+    vi.spyOn(proto, 'bulkPut').mockImplementation(function (this: { name: string }, ...args: unknown[]) {
+      if (this.name === 'allergies') return Promise.reject(quotaError());
+      return originalBulkPut.apply(this, args);
+    });
     await expect(importBackup(backup)).rejects.toBeInstanceOf(StorageFullError);
     expect(await db.cats.count()).toBe(1);
     expect((await db.cats.toArray())[0]!.id).toBe(cat.id);
